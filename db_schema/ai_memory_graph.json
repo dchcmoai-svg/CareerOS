@@ -1,0 +1,36 @@
+{
+  "graph_segment": "AI Memory Graph",
+  "description": "Represents the persistent key-value context storage, recruiter reply memory, and optimization learnings stored by the ecosystem agent.",
+  "tables": [
+    {
+      "table_name": "core_aimemory",
+      "model_class": "AiMemory",
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer (AutoPK)",
+          "constraints": "PRIMARY KEY, AUTOINCREMENT",
+          "description": "Unique identifier for this AI context record."
+        },
+        {
+          "name": "user_id",
+          "type": "integer (OneToOneField)",
+          "constraints": "FOREIGN KEY(auth_user.id), UNIQUE, ON DELETE CASCADE",
+          "description": "Links persistent context directly to the active candidate."
+        },
+        {
+          "name": "context_blob",
+          "type": "JSONField",
+          "constraints": "DEFAULT {}",
+          "description": "Dynamic key-value context indexing recruiter comments, preferred keywords, and personalized guidance."
+        },
+        {
+          "name": "last_interaction_at",
+          "type": "datetime",
+          "constraints": "AUTO_NOW",
+          "description": "Timestamp indicating when the AI nervous system last enriched or processed context."
+        }
+      ]
+    }
+  ]
+}

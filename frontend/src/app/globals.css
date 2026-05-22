@@ -1,0 +1,191 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /* CareerOS Surface Colors */
+  --color-canvas: #07080A;
+  --color-surface-1: #0D0D0D;
+  --color-surface-2: #111214;
+  --color-surface-3: #17181B;
+  --color-surface-4: #1D1F23;
+  
+  /* Borders */
+  --color-hairline: rgba(255,255,255,0.08);
+  --color-border-strong: rgba(255,255,255,0.14);
+  
+  /* Text */
+  --color-text-primary: #F4F4F6;
+  --color-text-secondary: #B7BCC7;
+  --color-text-tertiary: #7C828D;
+  --color-text-disabled: #5B606A;
+  
+  /* Accents */
+  --color-ai: #7684F0;
+  --color-ai-hover: #8693FF;
+  --color-intelligence: #57C1FF;
+  --color-success: #59D499;
+  --color-warning: #FFC857;
+  --color-danger: #FF6161;
+
+  /*
+   * OS spacing scale — padding, margin, gap ONLY.
+   * Tailwind v4 maps --spacing-* to max-width too; never use bare max-w-md without
+   * the explicit --max-width-* tokens below or containers collapse (vertical text).
+   */
+  --spacing-xxs: 4px;
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+  --spacing-section: 96px;
+
+  /* Explicit max-width scale (required when custom --spacing-md etc. are defined) */
+  --max-width-xs: 20rem;
+  --max-width-sm: 24rem;
+  --max-width-md: 28rem;
+  --max-width-lg: 32rem;
+  --max-width-xl: 36rem;
+  --max-width-2xl: 42rem;
+  --max-width-3xl: 48rem;
+  --max-width-4xl: 56rem;
+  --max-width-5xl: 64rem;
+  --max-width-6xl: 72rem;
+  --max-width-7xl: 80rem;
+
+  /* Operational typography — use text-base, not invalid text-md */
+  --font-size-md: 1rem;
+  --font-size-md--line-height: 1.5;
+
+  /* Typography */
+  --font-sans: var(--font-inter);
+}
+
+@layer base {
+  :root {
+    --background: #07080A;
+    --foreground: #F4F4F6;
+  }
+}
+
+@layer base {
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans), sans-serif;
+    font-feature-settings: "ss03" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Custom scrollbar for an operational feel */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-surface-3);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-surface-4);
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Mesh gradient for cinematic hero surfaces */
+.mesh-gradient-hero {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(118, 132, 240, 0.15), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 50%, rgba(87, 193, 255, 0.08), transparent),
+    radial-gradient(ellipse 50% 30% at 20% 80%, rgba(89, 212, 153, 0.05), transparent);
+}
+
+/* Operational surface depth layers */
+.surface-elevated {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 4px 24px -8px rgba(0, 0, 0, 0.5);
+}
+
+/* Phase 3 — immersive surfaces */
+.glass-panel {
+  background: rgba(14, 17, 23, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 24px 48px -16px rgba(0, 0, 0, 0.65);
+}
+
+.glow-border-subtle {
+  box-shadow:
+    0 0 0 1px rgba(118, 132, 240, 0.12),
+    0 8px 32px -12px rgba(118, 132, 240, 0.2);
+}
+
+.ecosystem-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.shimmer-sweep {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.04) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes ambient-drift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(0, -8px);
+  }
+}
+
+.ambient-drift {
+  animation: ambient-drift 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-sweep,
+  .ambient-drift {
+    animation: none;
+  }
+}
+
+.surface-inset {
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Typography precision */
+.text-display {
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.text-mono-operational {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}

@@ -1,0 +1,54 @@
+{
+  "graph_segment": "Marketplace Graph",
+  "description": "Represents the stealth controls, blocked domains, target preferences, and trust parameters of the discoverability graph.",
+  "tables": [
+    {
+      "table_name": "core_marketplacepreferences",
+      "model_class": "MarketplacePreferences",
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer (AutoPK)",
+          "constraints": "PRIMARY KEY, AUTOINCREMENT",
+          "description": "Unique identifier for this preference set."
+        },
+        {
+          "name": "identity_id",
+          "type": "integer (OneToOneField)",
+          "constraints": "FOREIGN KEY(core_professionalidentity.id), UNIQUE, ON DELETE CASCADE",
+          "description": "Links visibility parameters to the user's Living Professional Identity."
+        },
+        {
+          "name": "is_stealth_mode",
+          "type": "boolean",
+          "constraints": "DEFAULT false",
+          "description": "If enabled, candidates are strictly hidden from searches and match triggers."
+        },
+        {
+          "name": "blocked_companies",
+          "type": "JSONField",
+          "constraints": "DEFAULT []",
+          "description": "JSON array of company identifiers/domains blocked from viewing this profile (e.g. ['stripe.com'])."
+        },
+        {
+          "name": "target_salary_min",
+          "type": "integer",
+          "constraints": "NULLABLE",
+          "description": "Strict base salary floor filter to prevent under-compensation offers."
+        },
+        {
+          "name": "target_role_types",
+          "type": "JSONField",
+          "constraints": "DEFAULT []",
+          "description": "JSON array of accepted workplace formats (e.g. ['Remote', 'Hybrid'])."
+        },
+        {
+          "name": "target_stages",
+          "type": "JSONField",
+          "constraints": "DEFAULT []",
+          "description": "JSON array of targeted corporate scales (e.g. ['Series B', 'Enterprise'])."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+# Python
+*.py[cod]
+__pycache__/
+*.pyo
+*.pyd
+*.pyc
+*.pyo
+*.pyd
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+media/
+
+# Environment
+.env
+
+# Virtual environment
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Celery
+celerybeat-schedule
+celerybeat-schedule-shm
+celerybeat-schedule-wal
+
+# OS files
+.DS_Store

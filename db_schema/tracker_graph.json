@@ -1,0 +1,114 @@
+{
+  "graph_segment": "Tracker & Operations Graph",
+  "description": "Represents the pipeline memory, recruiter interaction velocity, and outcomes tracking of the career operating system.",
+  "tables": [
+    {
+      "table_name": "core_trackeritem",
+      "model_class": "TrackerItem",
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer (AutoPK)",
+          "constraints": "PRIMARY KEY, AUTOINCREMENT",
+          "description": "Unique identifier for this pipeline element."
+        },
+        {
+          "name": "user_id",
+          "type": "integer (ForeignKey)",
+          "constraints": "FOREIGN KEY(auth_user.id), ON DELETE CASCADE",
+          "description": "Links the tracker process item to the candidate."
+        },
+        {
+          "name": "job_id",
+          "type": "integer (ForeignKey)",
+          "constraints": "FOREIGN KEY(scraper_job.id), ON DELETE SET_NULL, NULLABLE",
+          "description": "Optional integration link to a normalized scraped job posting."
+        },
+        {
+          "name": "company_name",
+          "type": "varchar(255)",
+          "constraints": "REQUIRED",
+          "description": "Name of the target employer."
+        },
+        {
+          "name": "role_title",
+          "type": "varchar(255)",
+          "constraints": "REQUIRED",
+          "description": "Job title targeted."
+        },
+        {
+          "name": "stage",
+          "type": "varchar(50)",
+          "constraints": "CHOICES: ['discovered', 'applied', 'interviewing', 'offer', 'rejected', 'stalled'], DEFAULT 'discovered'",
+          "description": "Current pipeline status stage."
+        },
+        {
+          "name": "stage_updated_at",
+          "type": "datetime",
+          "constraints": "AUTO_NOW_ADD",
+          "description": "Used to track time spent in this active stage (Stage Duration metrics)."
+        },
+        {
+          "name": "ats_score",
+          "type": "integer",
+          "constraints": "NULLABLE",
+          "description": "Optimal compilation alignment percentage score."
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "constraints": "AUTO_NOW_ADD",
+          "description": "Timestamp indicating initial save date."
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "constraints": "AUTO_NOW",
+          "description": "Timestamp indicating the last pipeline update."
+        }
+      ]
+    },
+    {
+      "table_name": "core_recruiterinteraction",
+      "model_class": "RecruiterInteraction",
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer (AutoPK)",
+          "constraints": "PRIMARY KEY, AUTOINCREMENT",
+          "description": "Unique identifier for this interaction timeline event."
+        },
+        {
+          "name": "tracker_item_id",
+          "type": "integer (ForeignKey)",
+          "constraints": "FOREIGN KEY(core_trackeritem.id), ON DELETE CASCADE",
+          "description": "Links the interaction to a specific application tracker track."
+        },
+        {
+          "name": "interaction_type",
+          "type": "varchar(50)",
+          "constraints": "CHOICES: ['outbound', 'inbound', 'interview']",
+          "description": "Mechanism of operational contact."
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "constraints": "NULLABLE",
+          "description": "Interaction transcripts, recruiter responses, or notes."
+        },
+        {
+          "name": "responded",
+          "type": "boolean",
+          "constraints": "DEFAULT false",
+          "description": "Used to calculate hiring velocity, ghost rates, and response metrics."
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "constraints": "AUTO_NOW_ADD",
+          "description": "Timestamp indicating when the interaction took place."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "graph_segment": "Discovery & Ingestion Graph",
+  "description": "Represents the labor market scraping, raw feed buffering, query indexing, and normalized job schema models.",
+  "tables": [
+    {
+      "table_name": "scraper_job",
+      "model_class": "Job",
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer (AutoPK)",
+          "constraints": "PRIMARY KEY, AUTOINCREMENT",
+          "description": "Unique identifier for the fully normalized job posting."
+        },
+        {
+          "name": "title",
+          "type": "varchar(255)",
+          "constraints": "REQUIRED",
+          "description": "Cleaned, standardized job title (e.g. 'Senior Frontend Engineer')."
+        },
+        {
+          "name": "company",
+          "type": "varchar(255)",
+          "constraints": "REQUIRED, DB_INDEX",
+          "description": "Original raw company name."
+        },
+        {
+          "name": "canonical_company",
+          "type": "varchar(255)",
+          "constraints": "NULLABLE, DB_INDEX",
+          "description": "AI-deduplicated canonical business identifier (e.g., Stripe Inc -> 'Stripe')."
+        },
+        {
+          "name": "work_mode",
+          "type": "varchar(20)",
+          "constraints": "CHOICES: ['remote', 'hybrid', 'onsite', 'unknown'], DEFAULT 'unknown'",
+          "description": "Normalized workplace environment format."
+        },
+        {
+          "name": "url",
+          "type": "URLField",
+          "constraints": "UNIQUE",
+          "description": "Canonical scraping target URL."
+        },
+        {
+          "name": "source",
+          "type": "varchar(100)",
+          "constraints": "REQUIRED, DB_INDEX",
+          "description": "Ingestion origin identifier (e.g., 'brightdata', 'greenhouse')."
+        },
+        {
+          "name": "raw_data",
+          "type": "JSONField",
+          "constraints": "NULLABLE",
+          "description": "Preserved raw scraped JSON content for historical compliance."
+        },
+        {
+          "name": "salary",
+          "type": "varchar(255)",
+          "constraints": "NULLABLE",
+          "description": "Extracted original compensation text block."
+        },
+        {
+          "name": "city",
+          "type": "varchar(255)",
+          "constraints": "NULLABLE, DB_INDEX",
+          "description": "Normalized location city."
+        },
+        {
+          "name": "country",
+          "type": "varchar(255)",
+          "constraints": "NULLABLE, DB_INDEX",
+          "description": "Normalized location country."
+        },
+        {
+          "name": "description",
+          "type": "TextField",
+          "constraints": "NULLABLE",
+          "description": "Normalized job description content."
+        },
+        {
+          "name": "posted_at",
+          "type": "datetime",
+          "constraints": "NULLABLE",
+          "description": "Timestamp indicating when the job was published."
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "constraints": "DEFAULT true, DB_INDEX",
+          "description": "Flag indicating if the listing is currently active in the market."
+        }
+      ]
+    },
+    {
+      "table_name": "scraper_rawjob",
+      "model_class": "RawJob",
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer (AutoPK)",
+          "constraints": "PRIMARY KEY, AUTOINCREMENT",
+          "description": "Unique identifier for raw ingestion buffering."
+        },
+        {
+          "name": "source",
+          "type": "varchar(100)",
+          "constraints": "REQUIRED",
+          "description": "Name of ingestion runner source."
+        },
+        {
+          "name": "raw_data",
+          "type": "JSONField",
+          "constraints": "REQUIRED",
+          "description": "Raw un-normalized buffer document."
+        },
+        {
+          "name": "processed",
+          "type": "boolean",
+          "constraints": "DEFAULT false",
+          "description": "True if already transformed and exported into scraper_job."
+        }
+      ]
+    }
+  ]
+}

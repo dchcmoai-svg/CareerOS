@@ -1,0 +1,102 @@
+{
+  "graph_segment": "Identity Graph",
+  "description": "Represents the core inferred identity, skills, and connectivity status of the professional.",
+  "tables": [
+    {
+      "table_name": "core_professionalidentity",
+      "model_class": "ProfessionalIdentity",
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer (AutoPK)",
+          "constraints": "PRIMARY KEY, AUTOINCREMENT",
+          "description": "Unique identifier for the professional identity record."
+        },
+        {
+          "name": "user_id",
+          "type": "integer (OneToOneField)",
+          "constraints": "UNIQUE, FOREIGN KEY(auth_user.id), ON DELETE CASCADE",
+          "description": "Reference to the active Django auth User record."
+        },
+        {
+          "name": "inferred_seniority",
+          "type": "varchar(50)",
+          "constraints": "NULLABLE, OPTIONAL",
+          "description": "AI-inferred seniority tier (e.g., Staff, Senior, Lead)."
+        },
+        {
+          "name": "primary_industry",
+          "type": "varchar(100)",
+          "constraints": "NULLABLE, OPTIONAL",
+          "description": "AI-inferred primary industry sector."
+        },
+        {
+          "name": "github_connected",
+          "type": "boolean",
+          "constraints": "DEFAULT false",
+          "description": "Flag indicating if the user has authenticated their GitHub profile."
+        },
+        {
+          "name": "linkedin_connected",
+          "type": "boolean",
+          "constraints": "DEFAULT false",
+          "description": "Flag indicating if the user has authenticated their LinkedIn profile."
+        },
+        {
+          "name": "resume_parsed",
+          "type": "boolean",
+          "constraints": "DEFAULT false",
+          "description": "Flag indicating if the core resume parsing engine has successfully extracted static data."
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "constraints": "AUTO_NOW_ADD",
+          "description": "Timestamp indicating when the identity graph was established."
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "constraints": "AUTO_NOW",
+          "description": "Timestamp indicating the last administrative or ingestion edit."
+        }
+      ]
+    },
+    {
+      "table_name": "core_skill",
+      "model_class": "Skill",
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer (AutoPK)",
+          "constraints": "PRIMARY KEY, AUTOINCREMENT",
+          "description": "Unique identifier for the skill mapping."
+        },
+        {
+          "name": "identity_id",
+          "type": "integer (ForeignKey)",
+          "constraints": "FOREIGN KEY(core_professionalidentity.id), ON DELETE CASCADE",
+          "description": "Links the skill to the user's primary professional identity."
+        },
+        {
+          "name": "name",
+          "type": "varchar(100)",
+          "constraints": "REQUIRED, CASE_INSENSITIVE_UNIQUE (via DB Index)",
+          "description": "Name of the technical or professional capability (e.g., 'React', 'Rust')."
+        },
+        {
+          "name": "inferred_from",
+          "type": "varchar(50)",
+          "constraints": "CHOICES: ['github', 'linkedin', 'resume', 'manual']",
+          "description": "Source of enrichment signal for this capability."
+        },
+        {
+          "name": "is_verified",
+          "type": "boolean",
+          "constraints": "DEFAULT false",
+          "description": "True if confirmed by candidate via progressive verification cards."
+        }
+      ]
+    }
+  ]
+}

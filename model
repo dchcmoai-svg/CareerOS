@@ -1,0 +1,207 @@
+from django.db import models
+from django.utils import timezone
+
+class Job(models.Model):
+
+
+    TEAMS = {
+        "Administrative": [],
+        "Communications": [],
+        "Corporate Development": [],
+        "Corporate Security": [],
+        "Corporate Strategy": [],
+        "Data & Data Science": [],
+        "Data Platform": [],
+        "Design": [],
+        "Executive": [],
+        "Finance": [
+            "Controllership",
+            "Finance & Strategy",
+            "Internal Audit",
+            "Investor Relations",
+            "Tax",
+            "Treasury",
+            "Workplace"
+        ],
+        "Global Partnerships": [],
+        "Go-to-Market": [
+            "Customer Success",
+            "Global Strategic Pursuits",
+            "GTM Partnerships",
+            "Marketing",
+            "Revenue Operations",
+            "Sales",
+            "Scaled Sales",
+            "Solutions Architect"
+        ],
+        "Infrastructure & Corporate Tech": [],
+        "Legal": [],
+        "Machine Learning": [],
+        "Operations": [
+            "Technical Account Management"
+        ],
+        "People": [
+            "Recruiting",
+            "People Functions"
+        ],
+        "Products": [
+            "Banking as a Service",
+            "Climate",
+            "Connect",
+            "Crypto",
+            "Mobile",
+            "Link",
+            "Metronome",
+            "Money Movement and Storage",
+            "New Financial Products",
+            "Payments",
+            "Platform",
+            "Professional Services",
+            "Privy",
+            "Revenue & Financial Automation",
+            "Stripe Tax",
+            "Terminal"
+        ],
+        "Risk & Financial Crimes": [],
+        "Security": [],
+        "Tech Programs": [],
+        "University": []
+    }
+    
+
+    OFFICE_LOCATIONS = {
+        "North America": [
+            "Atlanta",
+            "Chicago",
+            "New York",
+            "San Francisco Bridge HQ",
+            "South San Francisco HQ",
+            "Washington DC",
+            "Seattle",
+            "Toronto",
+            "Mexico City"
+        ],
+        "Europe": [
+            "Amsterdam",
+            "Berlin",
+            "London",
+            "Dublin HQ",
+            "Warsaw",
+            "Bucharest",
+            "Madrid",
+            "Barcelona",
+            "Paris",
+            "Stockholm",
+            "Luxembourg"
+        ],
+        "Asia Pacific": [
+            "Sydney",
+            "Melbourne",
+            "Jakarta",
+            "Bengaluru",
+            "Tokyo",
+            "Singapore",
+            "Bangkok"
+        ],
+        "Latin America": [
+            "São Paulo",
+            "Mexico City"
+        ],
+        "Middle East": [
+            "Dubai"
+        ]
+    }
+
+
+    REMOTE_LOCATIONS = {
+        "North America": [
+            "United States",
+            "Canada",
+            "Mexico"
+        ],
+        "Europe": [
+            "Austria",
+            "Belgium",
+            "Czechia",
+            "Estonia",
+            "France",
+            "Germany",
+            "Great Britain",
+            "Ireland",
+            "Israel",
+            "Italy",
+            "Netherlands",
+            "Poland",
+            "Portugal",
+            "Romania",
+            "Spain",
+            "Sweden",
+            "Switzerland"
+        ],
+        "Asia Pacific": [
+            "Australia",
+            "Hong Kong",
+            "Indonesia",
+            "India",
+            "Japan",
+            "Malaysia",
+            "New Zealand",
+            "South Korea",
+            "Thailand"
+        ],
+        "Latin America": [
+            "Argentina",
+            "Brazil",
+            "Chile",
+            "Mexico"
+        ]
+    }
+
+    @classmethod
+    def flattened_team_values(cls):
+        values = []
+        for parent, children in cls.TEAMS.items():
+            values.append(parent)
+            values.extend(children)
+        return values
+
+    @classmethod
+    def flattened_office_locations(cls):
+        values = []
+        for location_list in cls.OFFICE_LOCATIONS.values():
+            values.extend(location_list)
+        return values
+
+    @classmethod 
+    def flattened_remote_locations(cls):
+        values = []
+        for location_list in cls.REMOTE_LOCATIONS.values():
+            values.extend(location_list)
+        return values
+
+    title = models.CharField(max_length=200)
+    team = models.CharField(max_length=100)
+    company = models.CharField(max_length=100)
+    location = models.CharField(max_length=100)
+    url = models.URLField()
+    source = models.CharField(max_length=100)
+    date_added = models.DateTimeField(default=timezone.now)
+    def __str__(self):
+        return self.title
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+   

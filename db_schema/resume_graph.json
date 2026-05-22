@@ -1,0 +1,54 @@
+{
+  "graph_segment": "Resume Graph",
+  "description": "Represents the optimized compiler diagnostics, scores, and git-like branch variants of the candidate's professional resume.",
+  "tables": [
+    {
+      "table_name": "core_resumevariant",
+      "model_class": "ResumeVariant",
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer (AutoPK)",
+          "constraints": "PRIMARY KEY, AUTOINCREMENT",
+          "description": "Unique identifier for this resume variant."
+        },
+        {
+          "name": "user_id",
+          "type": "integer (ForeignKey)",
+          "constraints": "FOREIGN KEY(auth_user.id), ON DELETE CASCADE",
+          "description": "Links the resume branch variant to the owner user."
+        },
+        {
+          "name": "branch_name",
+          "type": "varchar(100)",
+          "constraints": "REQUIRED, e.g. 'feature/stripe-frontend'",
+          "description": "Git-style branch name indicating the specific career-targeting version."
+        },
+        {
+          "name": "target_role",
+          "type": "varchar(100)",
+          "constraints": "NULLABLE, OPTIONAL",
+          "description": "The specific job title or area targeted by this compiler variant."
+        },
+        {
+          "name": "content_json",
+          "type": "JSONField",
+          "constraints": "DEFAULT {}",
+          "description": "Dense JSON document representing structured sections, diagnostics, custom wording, and overrides."
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "constraints": "AUTO_NOW_ADD",
+          "description": "Timestamp indicating when this compiler variant was branch-created."
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime",
+          "constraints": "AUTO_NOW",
+          "description": "Timestamp indicating the last compilation build or content change."
+        }
+      ]
+    }
+  ]
+}
