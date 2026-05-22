@@ -29,3 +29,5 @@ celerybeat-schedule-wal
 
 # OS files
 .DS_Store
+
+credentials.json
