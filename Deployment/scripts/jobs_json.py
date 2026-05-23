@@ -4,13 +4,15 @@ import json
 import os
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, ROOT)
+# Navigate from Deployment/scripts/ to Backend/
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+BACKEND_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "..", "Backend"))
+sys.path.insert(0, BACKEND_ROOT)
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
 # Prefer local SQLite for offline/dev export
 if not os.getenv("DATABASE_URL"):
-    os.environ["DATABASE_URL"] = f"sqlite:///{ROOT}/db.sqlite3"
+    os.environ["DATABASE_URL"] = f"sqlite:///{BACKEND_ROOT}/db.sqlite3"
 
 import django
 

@@ -7,8 +7,10 @@ import os
 import sqlite3
 from datetime import datetime, timezone
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB = os.getenv("SQLITE_PATH", os.path.join(ROOT, "db.sqlite3"))
+# Navigate from Deployment/scripts/ to Backend/
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+BACKEND_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "..", "Backend"))
+DB = os.getenv("SQLITE_PATH", os.path.join(BACKEND_ROOT, "db.sqlite3"))
 
 CATEGORY_KEYWORDS = {
     "software-engineering": ["engineer", "developer", "software", "frontend", "backend", "devops", "sre"],
