@@ -1,14 +1,24 @@
 import { execFile } from "child_process";
 import { promisify } from "util";
 import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
 import path from "path";
 
 const execFileAsync = promisify(execFile);
 
 const DJANGO_API = process.env.DJANGO_API_URL || "http://127.0.0.1:8000";
-const PROJECT_ROOT = path.resolve(process.cwd(), "..");
-const PYTHON = path.join(PROJECT_ROOT, "venv", "bin", "python");
-const SCRIPT = path.join(PROJECT_ROOT, "scripts", "jobs_json_sqlite.py");
+const PROJECT_ROOT = path.resolve(process.cwd(), "..", "..");
+const PYTHON =
+  process.env.PYTHON_PATH ||
+  (process.env.VIRTUAL_ENV
+    ? path.join(process.env.VIRTUAL_ENV, "bin", "python")
+    : path.join(PROJECT_ROOT, "venv", "bin", "python"));
+const SCRIPT = path.join(
+  PROJECT_ROOT,
+  "Deployment",
+  "scripts",
+  "jobs_json_sqlite.py"
+);
 
 async function fetchFromDjango(search: URLSearchParams) {
   const url = `${DJANGO_API}/api/jobs/?${search.toString()}`;
@@ -21,6 +31,10 @@ async function fetchFromDjango(search: URLSearchParams) {
 }
 
 async function fetchFromScript(search: URLSearchParams) {
+  if (!fs.existsSync(SCRIPT)) {
+    throw new Error(`Fallback script not found at ${SCRIPT}`);
+  }
+
   const env = {
     ...process.env,
     JOBS_Q: search.get("q") || "",
