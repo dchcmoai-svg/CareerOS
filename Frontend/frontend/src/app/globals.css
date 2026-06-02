@@ -4,12 +4,12 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  /* CareerOS Surface Colors */
-  --color-canvas: #07080A;
-  --color-surface-1: #0D0D0D;
-  --color-surface-2: #111214;
-  --color-surface-3: #17181B;
-  --color-surface-4: #1D1F23;
+  /* CareerOS graphite + surface ladder (Linear / Attio) */
+  --color-canvas: #0B0F14;
+  --color-surface-1: #111827;
+  --color-surface-2: #161B22;
+  --color-surface-3: #1F2630;
+  --color-surface-4: #252D38;
   
   /* Borders */
   --color-hairline: rgba(255,255,255,0.08);
@@ -21,13 +21,18 @@
   --color-text-tertiary: #7C828D;
   --color-text-disabled: #5B606A;
   
-  /* Accents */
-  --color-ai: #7684F0;
-  --color-ai-hover: #8693FF;
+  /* Semantic accents — meaning, not decoration */
+  --color-primary: #3B82F6;
+  --color-primary-hover: #60A5FA;
+  --color-ai: #3B82F6;
+  --color-ai-hover: #60A5FA;
   --color-intelligence: #57C1FF;
-  --color-success: #59D499;
-  --color-warning: #FFC857;
-  --color-danger: #FF6161;
+  --color-resume: #8B5CF6;
+  --color-market: #06B6D4;
+  --color-recruiter: #EC4899;
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
 
   /*
    * OS spacing scale — padding, margin, gap ONLY.
@@ -66,8 +71,13 @@
 
 @layer base {
   :root {
-    --background: #07080A;
+    --background: #0B0F14;
     --foreground: #F4F4F6;
+    --primary: #3B82F6;
+    --primary-foreground: #ffffff;
+    --muted: #1F2630;
+    --muted-foreground: #B7BCC7;
+    --border: rgba(255, 255, 255, 0.08);
   }
 }
 

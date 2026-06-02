@@ -8,10 +8,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { ShellUIProvider, useShellUI } from "@/lib/ShellUIContext";
 
-export function RecruiterAppShell({ children }: { children: ReactNode }) {
+function RecruiterAppShellInner({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const [isAgentOpen, setIsAgentOpen] = useState(true);
+  const { isAgentOpen, setAgentOpen } = useShellUI();
 
   const navItems = [
     { name: "Command Center", href: "/command-center", icon: Activity },
@@ -77,9 +78,17 @@ export function RecruiterAppShell({ children }: { children: ReactNode }) {
       {/* Persistent Recruiter Right Panel Agent */}
       <RightPanelAgent 
         isOpen={isAgentOpen} 
-        onClose={() => setIsAgentOpen(false)} 
+        onClose={() => setAgentOpen(false)} 
         context="global" 
       />
     </div>
+  );
+}
+
+export function RecruiterAppShell({ children }: { children: ReactNode }) {
+  return (
+    <ShellUIProvider>
+      <RecruiterAppShellInner>{children}</RecruiterAppShellInner>
+    </ShellUIProvider>
   );
 }

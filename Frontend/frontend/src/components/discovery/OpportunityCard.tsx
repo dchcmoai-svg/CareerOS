@@ -172,10 +172,24 @@ export function OpportunityCard({ data, isFocused, onExpand }: OpportunityCardPr
         )}
       </div>
 
+      <div className="mb-2 flex flex-wrap gap-1.5 relative z-10">
+        <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-resume/10 text-resume border border-resume/20">
+          Best resume: {data.fitScore >= 90 ? "feature/stripe-frontend" : "feature/staff-generalist"}
+        </span>
+        <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
+          {isStrongMatch ? "Recommended: tailor & apply" : "Review match details"}
+        </span>
+      </div>
+
       <div className="pt-3 border-t border-hairline/80 flex items-start justify-between gap-2 relative z-10">
-        <p className="text-[13px] text-text-secondary leading-relaxed line-clamp-2 flex-1">
-          {data.aiRationale}
-        </p>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wide mb-1">
+            {jobsCopy.whyMatch}
+          </p>
+          <p className="text-[13px] text-text-secondary leading-relaxed line-clamp-2">
+            {data.aiRationale}
+          </p>
+        </div>
         {data.url && isFocused && (
           <a
             href={data.url}

@@ -31,7 +31,7 @@ export function Topbar() {
           className="flex items-center gap-xs text-text-tertiary hover:text-text-secondary transition-all duration-150 active:scale-[0.98] text-[13px] px-sm py-1.5 rounded-md bg-surface-1 border border-hairline hover:bg-surface-2 hover:border-border-strong w-full max-w-[320px] shadow-[0_1px_2px_rgba(0,0,0,0.2)] group"
         >
           <Search className="w-3.5 h-3.5 group-hover:text-text-secondary transition-colors" />
-          <span className="text-text-tertiary group-hover:text-text-secondary transition-colors">Search opportunities or commands...</span>
+          <span className="text-text-tertiary group-hover:text-text-secondary transition-colors">Run career actions…</span>
           <div className="ml-auto flex items-center gap-1">
             <kbd className="text-[10px] bg-surface-3 px-1.5 py-0.5 rounded text-text-tertiary border border-hairline">⌘</kbd>
             <kbd className="text-[10px] bg-surface-3 px-1.5 py-0.5 rounded text-text-tertiary border border-hairline">K</kbd>
