@@ -31,3 +31,5 @@ celerybeat-schedule-wal
 .DS_Store
 
 credentials.json
+
+random.txt
