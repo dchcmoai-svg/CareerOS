@@ -11,12 +11,12 @@ export const product = {
 } as const;
 
 export const nav = {
-  dashboard: "Dashboard",
+  dashboard: "Mission Control",
   jobs: "Find Jobs",
   tracker: "Applications",
   resume: "Resume",
   marketplace: "Get Discovered",
-  profile: "Profile",
+  profile: "Career vault",
   alerts: "Notifications",
   settings: "Settings",
   commandMenu: "Quick Search",
@@ -69,8 +69,27 @@ export const jobs = {
   },
 } as const;
 
+export const missionControl = {
+  eyebrow: "Mission control",
+  title: (name: string) => `Good to see you, ${name}`,
+  subtitle:
+    "The system tracks your career health, opportunities, and pipeline — here's what matters right now.",
+  level1: "What to do next",
+  level1Hint: "Prioritized by urgency and impact",
+  level2: "Current state",
+  level3: "Supporting intelligence",
+  urgent: "Urgent",
+  recommended: "Recommended",
+  opportunities: "Opportunity intelligence",
+  opportunitiesHint: "Match, response odds, and the resume version to use",
+  recruiterSignals: "Recruiter signals",
+  recruiterHint: "Who's looking for profiles like yours",
+  careerVault: "Career vault",
+  vaultHint: "Applications, versions, and profile assets in one place",
+} as const;
+
 export const dashboard = {
-  title: "Your Career Hub",
+  title: "Mission Control",
   subtitle: (name: string) =>
     `Welcome back, ${name}. Here's what needs your attention and what's improving.`,
   pageGuide:
@@ -131,8 +150,51 @@ export const resume = {
 } as const;
 
 export const tracker = {
-  title: "Applications",
-  subtitle: "Track every application, follow-up, and interview in one place.",
+  title: "Pipeline intelligence",
+  subtitle: "Track every application with response probability, ghost risk, and follow-up timing.",
+  pageGuide:
+    "Each card shows how long you've been in a stage, whether the company tends to ghost applicants, and when a nudge helps most.",
+  ghostRisk: "Ghost risk",
+  responseProb: "Response probability",
+  followUp: "Suggested follow-up",
+} as const;
+
+export const profile = {
+  title: "Career vault",
+  subtitle: "Your professional story, resume versions, and skills — connected across your job search.",
+  pageGuide:
+    "Everything recruiters see flows from here. Keep skills verified and resume versions aligned to the roles you want.",
+  completeness: "Profile strength",
+  completenessHint: "Add a summary and verify 2 more skills to reach 90%+.",
+  documents: "Documents",
+  resumeDesc: "The version we tailor for each application.",
+  coverLetterDesc: "Default letter — editable per role when you apply.",
+  experience: "Experience",
+  skills: "Skills",
+  resumeVersions: "Resume versions",
+} as const;
+
+export const settings = {
+  title: "Settings",
+  subtitle: "Privacy, applications, notifications, and how your career assistant helps you.",
+  pageGuide: "Changes apply across jobs, applications, and recruiter visibility.",
+  sections: {
+    connections: "Connected accounts",
+    privacy: "Privacy & visibility",
+    applications: "Application preferences",
+    assistant: "Career assistant",
+    notifications: "Notifications",
+  },
+  stealth: "Hide from current employer",
+  stealthHint: "Recruiters at your company won't see your profile.",
+  blocked: "Blocked companies",
+  salary: "Minimum salary",
+  workplace: "Work style",
+  memory: "Remember my preferences",
+  memoryHint: "Helps suggestions improve over time — you can clear this anytime.",
+  notifyRecruiter: "Recruiter views & messages",
+  notifyResume: "Resume improvement tips",
+  notifyFollowUp: "Follow-up reminders",
 } as const;
 
 export const marketplace = {
@@ -170,11 +232,13 @@ export const agent = {
 } as const;
 
 export const command = {
-  placeholder: "Search pages, jobs, and actions…",
-  empty: "Nothing matched — try a job title or page name.",
+  placeholder: "Run a career action or jump somewhere…",
+  empty: "No actions matched — try “follow-up” or “high priority”.",
   navigate: "Go to",
-  assistant: "Ask your career assistant",
-  footer: "Press Esc to close",
+  actions: "Career actions",
+  intelligence: "Intelligence",
+  assistant: "Assistant",
+  footer: "CareerOS command palette",
 } as const;
 
 export const onboarding = {

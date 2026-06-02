@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
-import { useEcosystem } from "@/lib/EcosystemContext";
 import {
   SlidersHorizontal,
   Search,
@@ -10,21 +8,17 @@ import {
   TrendingUp,
   AlertTriangle,
   Sparkles,
-  ArrowRight,
   Loader2,
-  MapPin,
   RefreshCw,
 } from "lucide-react";
-import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
-import { staggerContainer, slideUpVariants, listItemVariants, detailPanelVariants, layoutSpring } from "@/lib/motion";
+import { motion } from "framer-motion";
+import { staggerContainer, slideUpVariants } from "@/lib/motion";
 import { FilterChip } from "@/components/motion/FilterChip";
-import { JobListSkeleton } from "@/components/motion/JobListSkeleton";
-import { OpportunityCard, OpportunityData } from "@/components/discovery/OpportunityCard";
 import { PageHeader } from "@/components/ecosystem/PageHeader";
-import { OpportunityCompareStrip } from "@/components/discovery/OpportunityCompareStrip";
 import { TactileButton } from "@/components/ecosystem/TactileButton";
+import { OpportunityIntelligenceTable } from "@/components/jobs/OpportunityIntelligenceTable";
 import { jobs as jobsCopy } from "@/lib/copy";
-import { ScoreHint } from "@/components/ecosystem/ContextualGuide";
+import { useCareerGraph } from "@/lib/career-graph";
 import {
   JOB_CATEGORIES,
   mapJobToOpportunity,
@@ -34,8 +28,6 @@ import {
 type SortMode = "match" | "recent";
 
 export default function JobsPage() {
-  const [opportunities, setOpportunities] = useState<OpportunityData[]>([]);
-  const [selectedJob, setSelectedJob] = useState<OpportunityData | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [filterRemote, setFilterRemote] = useState(false);
@@ -46,7 +38,11 @@ export default function JobsPage() {
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
 
-  const { setActiveIntelligence } = useEcosystem();
+  const opportunities = useCareerGraph((s) => s.opportunities);
+  const selectedOpportunityId = useCareerGraph((s) => s.selectedOpportunityId);
+  const setOpportunitiesFromApi = useCareerGraph((s) => s.setOpportunitiesFromApi);
+  const selectOpportunity = useCareerGraph((s) => s.selectOpportunity);
+  const pushLiveSignal = useCareerGraph((s) => s.pushLiveSignal);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(searchQuery), 300);
@@ -67,16 +63,25 @@ export default function JobsPage() {
       if (!res.ok && data.error) throw new Error(data.error);
 
       const mapped = (data.jobs as JobApiRecord[]).map(mapJobToOpportunity);
-      setOpportunities(mapped);
+      setOpportunitiesFromApi(mapped);
       setTotal(data.total ?? mapped.length);
-      if (mapped.length && !selectedJob) setSelectedJob(mapped[0]);
+      if (mapped.length && !selectedOpportunityId) {
+        selectOpportunity(mapped[0].id);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : jobsCopy.error);
-      setOpportunities([]);
+      setOpportunitiesFromApi([]);
     } finally {
       setLoading(false);
     }
-  }, [debouncedQuery, filterRemote, category]);
+  }, [
+    debouncedQuery,
+    filterRemote,
+    category,
+    setOpportunitiesFromApi,
+    selectOpportunity,
+    selectedOpportunityId,
+  ]);
 
   useEffect(() => {
     loadJobs();
@@ -101,35 +106,24 @@ export default function JobsPage() {
     return sortedOpportunities.filter((o) => o.location.toLowerCase().includes("hybrid"));
   }, [sortedOpportunities, filterHybrid]);
 
-  const { focusedIndex } = useKeyboardNavigation(filteredOpportunities.length, (idx) => {
-    setSelectedJob(filteredOpportunities[idx]);
-  });
-
-  useEffect(() => {
-    const focusedJob = filteredOpportunities[focusedIndex];
-    if (!focusedJob) return;
-    setSelectedJob(focusedJob);
-    if (focusedJob.ghostScore > 70) {
-      setActiveIntelligence(
-        `${focusedJob.company} tends to respond slowly. Consider roles with higher response likelihood first.`
-      );
-    } else if (focusedJob.fitScore > 90) {
-      setActiveIntelligence(
-        `Strong match for ${focusedJob.role} at ${focusedJob.company}. Want help tailoring your resume for this role?`
-      );
-    } else {
-      setActiveIntelligence(
-        `${focusedJob.company} — ${100 - focusedJob.ghostScore}% response likelihood. Small resume tweaks could raise your match to 90%+.`
-      );
-    }
-  }, [focusedIndex, filteredOpportunities, setActiveIntelligence]);
-
   const avgFit =
     filteredOpportunities.length > 0
       ? Math.round(
           filteredOpportunities.reduce((s, o) => s + o.fitScore, 0) / filteredOpportunities.length
         )
       : 0;
+
+  const handleSelect = (id: string) => {
+    selectOpportunity(id);
+    const opp = filteredOpportunities.find((o) => o.id === id);
+    if (opp && opp.fitScore >= 90) {
+      pushLiveSignal({
+        message: `Strong match: ${opp.role} at ${opp.company} — resume variant linked`,
+        domain: "primary",
+        href: "/jobs",
+      });
+    }
+  };
 
   return (
     <motion.div
@@ -168,11 +162,6 @@ export default function JobsPage() {
         ))}
       </motion.div>
 
-      <motion.div variants={slideUpVariants}>
-        <OpportunityCompareStrip jobs={filteredOpportunities.slice(0, 4)} />
-      </motion.div>
-
-      {/* Stats strip */}
       <motion.div
         variants={slideUpVariants}
         className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-md flex-shrink-0"
@@ -200,10 +189,9 @@ export default function JobsPage() {
         ))}
       </motion.div>
 
-      {/* Search + filters */}
       <motion.div
         variants={slideUpVariants}
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md mb-lg flex-shrink-0"
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md mb-md flex-shrink-0"
       >
         <div className="flex-1 w-full max-w-xl relative">
           <Search className="absolute left-3 top-2.5 w-4 h-4 text-text-tertiary" />
@@ -250,143 +238,32 @@ export default function JobsPage() {
         </div>
       </motion.div>
 
-      <LayoutGroup>
-      <div className="flex-1 flex gap-lg min-h-0 overflow-hidden">
-        <div className="flex-1 overflow-y-auto space-y-3 pr-2 min-w-0">
-          {loading && <JobListSkeleton count={6} />}
-          {error && !loading && (
-            <div className="text-center py-16 px-4 border border-dashed border-danger/30 rounded-xl bg-danger/5">
-              <AlertTriangle className="w-8 h-8 text-danger mx-auto mb-2" />
-              <p className="text-sm text-text-secondary">{error}</p>
-              <button
-                type="button"
-                onClick={loadJobs}
-                className="mt-3 text-xs font-bold text-ai hover:underline"
-              >
-                Try again
-              </button>
-            </div>
-          )}
-          {!loading && !error && (
-            <AnimatePresence mode="popLayout">
-              {filteredOpportunities.map((job, idx) => (
-                <motion.div
-                  key={job.id}
-                  variants={listItemVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  layout
-                >
-                  <OpportunityCard
-                    data={job}
-                    isFocused={focusedIndex === idx || selectedJob?.id === job.id}
-                    onExpand={() => setSelectedJob(job)}
-                  />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          )}
-          {!loading && !error && filteredOpportunities.length === 0 && (
-            <div className="text-center py-20 border border-dashed border-hairline rounded-xl text-text-tertiary text-sm">
-              {jobsCopy.noResults}
-            </div>
-          )}
+      {error && !loading && (
+        <div className="text-center py-8 px-4 border border-dashed border-danger/30 rounded-xl bg-danger/5 mb-md">
+          <AlertTriangle className="w-6 h-6 text-danger mx-auto mb-2" />
+          <p className="text-sm text-text-secondary">{error}</p>
+          <button type="button" onClick={loadJobs} className="mt-2 text-xs font-bold text-ai hover:underline">
+            Try again
+          </button>
         </div>
+      )}
 
-        <AnimatePresence mode="wait">
-          {selectedJob && !loading && (
-            <motion.aside
-              key={selectedJob.id}
-              variants={detailPanelVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              transition={layoutSpring}
-              className="hidden lg:flex w-[360px] flex-col glass-panel surface-elevated p-5 overflow-y-auto shrink-0"
-            >
-              <div className="border-b border-hairline pb-4 mb-4">
-                <h3 className="font-bold text-base text-text-primary leading-snug">
-                  {selectedJob.role}
-                </h3>
-                <p className="text-sm text-text-secondary mt-1">
-                  {selectedJob.company} · {selectedJob.location}
-                </p>
-                <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-success/10 text-success text-xs font-bold border border-success/20">
-                  {selectedJob.fitScore}% {jobsCopy.strongMatch}
-                </div>
-              </div>
+      {loading && (
+        <div className="flex items-center justify-center py-12 gap-2 text-text-tertiary text-sm">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          {jobsCopy.loading}
+        </div>
+      )}
 
-              <div className="space-y-4 flex-1">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary mb-2">
-                    What these numbers mean
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <ScoreHint
-                      label={jobsCopy.responseLikelihood}
-                      value={`${100 - selectedJob.ghostScore}%`}
-                      hint={jobsCopy.scoreHints.response}
-                      tone={selectedJob.ghostScore < 40 ? "success" : "warning"}
-                    />
-                    <ScoreHint
-                      label={jobsCopy.hiringPace}
-                      value={selectedJob.hiringVelocity}
-                      hint={jobsCopy.scoreHints.hiring}
-                      tone="neutral"
-                    />
-                  </div>
-                  <div className="mt-2">
-                    <ScoreHint
-                      label="Match with your resume"
-                      value={`${selectedJob.fitScore}%`}
-                      hint={jobsCopy.scoreHints.match}
-                      tone={selectedJob.fitScore >= 85 ? "success" : "neutral"}
-                    />
-                  </div>
-                </div>
-
-                {selectedJob.compensation !== "Salary not listed" && (
-                  <div className="flex items-center gap-2 text-sm text-text-secondary">
-                    <MapPin className="w-4 h-4 text-text-tertiary" />
-                    <span>{selectedJob.compensation}</span>
-                  </div>
-                )}
-
-                <div className="bg-surface-2 p-4 rounded-lg border border-hairline/80">
-                  <p className="text-xs font-bold text-text-primary mb-2 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-ai" />
-                    {jobsCopy.whyMatch}
-                  </p>
-                  <p className="text-[13px] text-text-secondary leading-relaxed">
-                    {selectedJob.aiRationale}
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-4 mt-4 border-t border-hairline flex flex-col gap-2">
-                {selectedJob.url && (
-                  <a
-                    href={selectedJob.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full py-2.5 bg-ai text-canvas rounded-lg hover:bg-ai-hover font-bold text-xs text-center flex items-center justify-center gap-2 transition-colors"
-                  >
-                    {jobsCopy.applyNow} <ArrowRight className="w-3.5 h-3.5" />
-                  </a>
-                )}
-                <button
-                  type="button"
-                  className="w-full py-2 border border-hairline rounded-lg text-xs font-semibold text-text-secondary hover:bg-surface-2 transition-colors"
-                >
-                  {jobsCopy.tailorResume}
-                </button>
-              </div>
-            </motion.aside>
-          )}
-        </AnimatePresence>
-      </div>
-      </LayoutGroup>
+      {!loading && !error && (
+        <motion.div variants={slideUpVariants} className="flex-1 min-h-0 overflow-y-auto pb-md">
+          <OpportunityIntelligenceTable
+            opportunities={filteredOpportunities}
+            selectedId={selectedOpportunityId}
+            onSelect={handleSelect}
+          />
+        </motion.div>
+      )}
     </motion.div>
   );
 }

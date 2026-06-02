@@ -116,7 +116,7 @@ export function RightPanelAgent({ isOpen, onClose, context }: RightPanelAgentPro
 
               {context === "global" && (
                 <div className="space-y-md pt-sm border-t border-hairline">
-                  <QuickSkillVerify />
+                  <QuickSkillVerify inferredSkills={["React", "TypeScript", "Node.js"]} />
                   <SalaryPreferenceCard />
                   <ResumeUploadTrigger />
                 </div>
