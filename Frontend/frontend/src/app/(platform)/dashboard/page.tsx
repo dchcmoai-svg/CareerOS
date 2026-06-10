@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useUserEcosystem } from "@/lib/UserEcosystemContext";
 import { MissionControlDashboard } from "@/components/dashboard/MissionControlDashboard";
@@ -7,6 +9,14 @@ import { MissionControlDashboard } from "@/components/dashboard/MissionControlDa
 export default function DashboardPage() {
   const { data: session } = useSession();
   const { profile, isHydrated } = useUserEcosystem();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isHydrated && profile?.role === "recruiter") {
+      router.replace("/command-center");
+    }
+  }, [isHydrated, profile, router]);
+
   const firstName =
     profile?.name?.split(" ")[0] || session?.user?.name?.split(" ")[0] || "there";
 

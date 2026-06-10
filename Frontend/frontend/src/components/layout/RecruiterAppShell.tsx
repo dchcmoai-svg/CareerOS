@@ -16,8 +16,8 @@ function RecruiterAppShellInner({ children }: { children: ReactNode }) {
 
   const navItems = [
     { name: "Command Center", href: "/command-center", icon: Activity },
-    { name: "Talent Explorer", href: "#", icon: Search },
-    { name: "Pipeline", href: "#", icon: Briefcase },
+    { name: "Talent Explorer", href: "/command-center/scout", icon: Search },
+    { name: "Pipeline", href: "/command-center/pipeline", icon: Briefcase },
     { name: "Trust & Quality", href: "#", icon: Shield },
   ];
 

@@ -67,5 +67,6 @@ export const config = {
     "/sign-in",
     "/sign-up",
     "/command-center/:path*",
+    "/referrals/:path*",
   ],
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TrackerBoard } from "@/components/tracker/TrackerBoard";
 import { PipelineDetailPanel } from "@/components/tracker/PipelineDetailPanel";
 import { useCareerGraph } from "@/lib/career-graph";
@@ -18,7 +18,19 @@ export default function TrackerPage() {
   const applications = useCareerGraph((s) => s.applications);
   const selectApplication = useCareerGraph((s) => s.selectApplication);
   const selectedApplicationId = useCareerGraph((s) => s.selectedApplicationId);
+  const setApplications = useCareerGraph((s) => s.setApplications);
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    fetch("/api/applications")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.applications) {
+          setApplications(data.applications);
+        }
+      })
+      .catch((err) => console.error("Failed to load applications:", err));
+  }, [setApplications]);
 
   const selectedItem =
     applications.find((a) => a.id === selectedApplicationId) ?? applications[0] ?? null;
