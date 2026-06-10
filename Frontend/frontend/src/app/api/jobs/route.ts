@@ -26,6 +26,7 @@ async function fetchFromDjango(search: URLSearchParams) {
   const res = await fetch(url, {
     headers: { Accept: "application/json" },
     signal: AbortSignal.timeout(20000),
+    next: { revalidate: false }, // Use force-cache by default
   });
   if (!res.ok) throw new Error(`Django API ${res.status}`);
   return res.json();
@@ -61,7 +62,12 @@ export async function GET(request: NextRequest) {
 
   try {
     const data = await fetchFromDjango(search);
-    return NextResponse.json(data);
+    // Cache response indefinitely until revalidated
+    return NextResponse.json(data, {
+      headers: {
+        "Cache-Control": "public, max-age=31536000", // 1 year
+      },
+    });
   } catch (djangoError) {
     if (!ALLOW_SQLITE_FALLBACK) {
       const message = djangoError instanceof Error ? djangoError.message : "Failed to load jobs from Django";
@@ -73,7 +79,11 @@ export async function GET(request: NextRequest) {
 
     try {
       const data = await fetchFromScript(search);
-      return NextResponse.json({ ...data, _source: "local" });
+      return NextResponse.json({ ...data, _source: "local" }, {
+        headers: {
+          "Cache-Control": "public, max-age=31536000", // 1 year
+        },
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to load jobs";
       return NextResponse.json(

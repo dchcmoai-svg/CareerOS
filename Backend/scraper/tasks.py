@@ -1,3 +1,6 @@
+import logging
+import os
+import requests
 from celery import shared_task
 from datetime import timedelta
 from django.utils import timezone
@@ -13,6 +16,38 @@ from scraper.sources.greenhouse import scrape_greenhouse_company_jobs, GREENHOUS
 from scraper.sources.lever import scrape_lever_jobs_multiple_companies, scrape_stripe_lever_jobs
 from scraper.sources.remoteok import scrape_remoteok_jobs
 from scraper.exporters.google_sheets import export_jobs_to_google_sheets
+
+logger = logging.getLogger(__name__)
+
+
+def trigger_jobs_cache_revalidation():
+    """Trigger Next.js cache revalidation for jobs API after scraping completes."""
+    try:
+        frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+        revalidate_token = os.getenv("REVALIDATE_TOKEN", "")
+        
+        if not revalidate_token:
+            logger.warning("REVALIDATE_TOKEN not set, skipping cache revalidation")
+            return False
+        
+        response = requests.post(
+            f"{frontend_url}/api/revalidate-jobs",
+            headers={
+                "X-Revalidate-Token": revalidate_token,
+                "Content-Type": "application/json",
+            },
+            timeout=10,
+        )
+        
+        if response.status_code == 200:
+            logger.info("Successfully triggered jobs cache revalidation")
+            return True
+        else:
+            logger.warning(f"Cache revalidation failed with status {response.status_code}")
+            return False
+    except Exception as e:
+        logger.error(f"Error triggering cache revalidation: {str(e)}")
+        return False
 
 
 def create_scrape_run(source: str, company: str | None = None) -> ScrapeRun:
@@ -134,12 +169,16 @@ def refresh_old_jobs_task(limit: int = 25):
 def scrape_greenhouse_jobs_task():
     """Scrape jobs from all Greenhouse-based platforms"""
     results = []
+    total_saved = 0
+    total_updated = 0
     
     for company_slug in GREENHOUSE_COMPANIES.keys():
         run = create_scrape_run(source="greenhouse", company=company_slug)
         try:
             jobs = scrape_greenhouse_company_jobs(company_slug)
             result = save_jobs(jobs, run=run)
+            total_saved += result.get("records_saved", 0)
+            total_updated += result.get("records_updated", 0)
             results.append(f"{company_slug}: {result}")
         except Exception as e:
             run.status = "failure"
@@ -147,6 +186,10 @@ def scrape_greenhouse_jobs_task():
             run.finished_at = timezone.now()
             run.save()
             results.append(f"{company_slug} failed: {str(e)}")
+    
+    # Trigger cache revalidation if jobs were saved or updated
+    if total_saved > 0 or total_updated > 0:
+        trigger_jobs_cache_revalidation()
     
     return f"Greenhouse: {results}"
 
@@ -158,6 +201,9 @@ def scrape_lever_jobs_task():
     try:
         jobs = scrape_lever_jobs_multiple_companies()
         result = save_jobs(jobs, run=run)
+        # Trigger cache revalidation if jobs were saved or updated
+        if result.get("records_saved", 0) > 0 or result.get("records_updated", 0) > 0:
+            trigger_jobs_cache_revalidation()
         return f"Lever: {result}"
     except Exception as e:
         run.status = "failure"
@@ -174,6 +220,9 @@ def scrape_stripe_lever_jobs_task():
     try:
         jobs = scrape_stripe_lever_jobs()
         result = save_jobs(jobs, run=run)
+        # Trigger cache revalidation if jobs were saved or updated
+        if result.get("records_saved", 0) > 0 or result.get("records_updated", 0) > 0:
+            trigger_jobs_cache_revalidation()
         return f"Stripe Lever: {result}"
     except Exception as e:
         run.status = "failure"
@@ -190,6 +239,9 @@ def scrape_remoteok_jobs_task():
     try:
         jobs = scrape_remoteok_jobs()
         result = save_jobs(jobs, run=run)
+        # Trigger cache revalidation if jobs were saved or updated
+        if result.get("records_saved", 0) > 0 or result.get("records_updated", 0) > 0:
+            trigger_jobs_cache_revalidation()
         return f"RemoteOK: {result}"
     except Exception as e:
         run.status = "failure"
@@ -206,6 +258,9 @@ def scrape_brightdata_linkedin_urls_task(urls: list):
     try:
         jobs = scrape_linkedin_by_url(urls)
         result = save_jobs(jobs, run=run)
+        # Trigger cache revalidation if jobs were saved or updated
+        if result.get("records_saved", 0) > 0 or result.get("records_updated", 0) > 0:
+            trigger_jobs_cache_revalidation()
         return f"Brightdata LinkedIn URLs: {result}"
     except Exception as e:
         run.status = "failure"
@@ -222,6 +277,9 @@ def scrape_brightdata_linkedin_keyword_task(inputs: list):
     try:
         jobs = scrape_linkedin_by_keyword(inputs)
         result = save_jobs(jobs, run=run)
+        # Trigger cache revalidation if jobs were saved or updated
+        if result.get("records_saved", 0) > 0 or result.get("records_updated", 0) > 0:
+            trigger_jobs_cache_revalidation()
         return f"Brightdata LinkedIn Keyword: {result}"
     except Exception as e:
         run.status = "failure"
