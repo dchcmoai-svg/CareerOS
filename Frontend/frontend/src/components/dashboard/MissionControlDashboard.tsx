@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -13,7 +13,10 @@ import {
   TrendingUp,
   GitBranch,
   Eye,
+  Gift,
 } from "lucide-react";
+import { useUserEcosystem } from "@/lib/UserEcosystemContext";
+import { useCareerGraph } from "@/lib/career-graph";
 import { staggerContainer, slideUpVariants, staggerItem } from "@/lib/motion";
 import { IntelligenceCard } from "@/components/intelligence/IntelligenceCard";
 import {
@@ -36,6 +39,36 @@ interface MissionControlDashboardProps {
 }
 
 export function MissionControlDashboard({ userName }: MissionControlDashboardProps) {
+  const { profile, refreshProfile } = useUserEcosystem();
+  const applications = useCareerGraph((s) => s.applications);
+  const [claimCode, setClaimCode] = useState("");
+  const [submittingClaim, setSubmittingClaim] = useState(false);
+
+  const handleClaimReferral = async () => {
+    if (!claimCode.trim()) return;
+    setSubmittingClaim(true);
+    try {
+      const res = await fetch("/api/user/referral", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ referralCode: claimCode.trim() }),
+      });
+      if (res.ok) {
+        alert("Referral claimed successfully! Your friend has been credited $50.");
+        setClaimCode("");
+        await refreshProfile();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to claim referral code.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to claim referral.");
+    } finally {
+      setSubmittingClaim(false);
+    }
+  };
+
   return (
     <motion.div
       variants={staggerContainer}
@@ -221,12 +254,73 @@ export function MissionControlDashboard({ userName }: MissionControlDashboardPro
               <div className="grid grid-cols-2 gap-2 text-[11px]">
                 <div className="p-2 rounded-md bg-surface-2 border border-hairline">
                   <p className="text-text-tertiary">Applications</p>
-                  <p className="text-lg font-bold text-text-primary tabular-nums">7</p>
+                  <p className="text-lg font-bold text-text-primary tabular-nums">{applications.length}</p>
                 </div>
                 <div className="p-2 rounded-md bg-surface-2 border border-hairline">
                   <p className="text-text-tertiary">Resume versions</p>
                   <p className="text-lg font-bold text-text-primary tabular-nums">4</p>
                 </div>
+              </div>
+            </IntelligenceCard>
+
+            <IntelligenceCard
+              title="Referral Rewards"
+              subtitle="Refer developers to earn rewards!"
+              icon={Gift}
+              domain="success"
+              href="#"
+            >
+              <div className="space-y-3 text-[11px]">
+                <div className="p-2.5 rounded-md bg-surface-2 border border-hairline flex justify-between items-center">
+                  <div className="min-w-0">
+                    <p className="text-text-tertiary font-medium">Your Referral Code</p>
+                    <p className="text-xs font-bold text-primary mt-0.5 select-all truncate">{profile?.referralCode || "—"}</p>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      if (profile?.referralCode) {
+                        navigator.clipboard.writeText(profile.referralCode);
+                        alert("Referral code copied to clipboard!");
+                      }
+                    }}
+                    className="px-2 py-1 bg-surface-1 hover:bg-surface-3 border border-hairline rounded text-[10px] font-semibold text-text-secondary shrink-0"
+                  >
+                    Copy
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-2 rounded-md bg-surface-2 border border-hairline">
+                    <p className="text-text-tertiary">Referred Friends</p>
+                    <p className="text-lg font-bold text-text-primary tabular-nums">{profile?.referredUsersCount || 0}</p>
+                  </div>
+                  <div className="p-2 rounded-md bg-success/10 border border-success/20">
+                    <p className="text-success font-semibold">Earned</p>
+                    <p className="text-lg font-bold text-success tabular-nums">${profile?.referralEarnings || 0}</p>
+                  </div>
+                </div>
+
+                {!profile?.referredBy && (
+                  <div className="pt-2 border-t border-hairline/80 flex flex-col gap-1.5">
+                    <p className="text-[10px] font-bold text-text-secondary uppercase">Claim Referral Reward</p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Friend's code (e.g. name_1234)"
+                        value={claimCode}
+                        onChange={(e) => setClaimCode(e.target.value)}
+                        disabled={submittingClaim}
+                        className="flex-1 bg-surface-2 border border-hairline rounded px-2.5 py-1 text-[11px] text-text-primary focus:outline-none focus:border-success/50"
+                      />
+                      <button
+                        onClick={handleClaimReferral}
+                        disabled={submittingClaim || !claimCode.trim()}
+                        className="px-2.5 py-1 bg-success text-white text-[11px] font-semibold rounded hover:bg-success/90 transition-colors disabled:opacity-50 cursor-pointer shrink-0"
+                      >
+                        {submittingClaim ? "..." : "Claim"}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </IntelligenceCard>
           </motion.div>

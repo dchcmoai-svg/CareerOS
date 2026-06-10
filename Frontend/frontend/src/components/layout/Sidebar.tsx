@@ -17,6 +17,7 @@ import {
   Network,
   User,
   Bell,
+  Gift,
 } from "lucide-react";
 import { nav as navCopy } from "@/lib/copy";
 
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { name: navCopy.tracker, href: "/tracker", icon: KanbanSquare },
   { name: navCopy.resume, href: "/resume", icon: FileText },
   { name: navCopy.marketplace, href: "/marketplace", icon: Network },
+  { name: "Referrals", href: "/referrals", icon: Gift },
 ];
 
 const SECONDARY_ITEMS = [

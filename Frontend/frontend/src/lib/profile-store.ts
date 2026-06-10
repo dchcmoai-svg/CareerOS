@@ -35,6 +35,8 @@ export async function initializeUserProfile(params: {
   name?: string | null;
   image?: string | null;
   provider: string;
+  role?: "candidate" | "recruiter";
+  referredBy?: string | null;
 }): Promise<UserProfile> {
   const existing = await getUserProfile(params.userId);
   if (existing) return existing;
@@ -48,5 +50,50 @@ export async function completeOnboarding(userId: string): Promise<UserProfile | 
   if (!profile) return null;
   profile.onboardingComplete = true;
   profile.aiState.lastContext = "Welcome to CareerOS. Your professional graph is active.";
+  return saveUserProfile(profile);
+}
+
+export async function completeOnboardingWithRole(
+  userId: string,
+  role: "candidate" | "recruiter",
+  referralCodeInput?: string | null
+): Promise<UserProfile | null> {
+  const profile = await getUserProfile(userId);
+  if (!profile) return null;
+
+  profile.onboardingComplete = true;
+  profile.role = role;
+
+  if (role === "candidate" && referralCodeInput) {
+    const DATA_DIR = path.join(process.cwd(), ".data", "users");
+    try {
+      const files = await fs.readdir(DATA_DIR);
+      let referrerProfile: UserProfile | null = null;
+
+      for (const file of files) {
+        if (file.endsWith(".json")) {
+          try {
+            const raw = await fs.readFile(path.join(DATA_DIR, file), "utf-8");
+            const p = JSON.parse(raw) as UserProfile;
+            if (p.referralCode === referralCodeInput && p.userId !== userId) {
+              referrerProfile = p;
+              break;
+            }
+          } catch {}
+        }
+      }
+
+      if (referrerProfile) {
+        referrerProfile.referredUsersCount = (referrerProfile.referredUsersCount || 0) + 1;
+        referrerProfile.referralEarnings = (referrerProfile.referralEarnings || 0) + 50; // $50 referral bonus!
+        await saveUserProfile(referrerProfile);
+        profile.referredBy = referrerProfile.userId;
+      }
+    } catch (err) {
+      console.error("Referral attribution failed:", err);
+    }
+  }
+
+  profile.aiState.lastContext = `Welcome to CareerOS. Your professional graph is active as a ${role}.`;
   return saveUserProfile(profile);
 }

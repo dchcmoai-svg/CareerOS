@@ -39,8 +39,38 @@ export function OpportunityIntelligenceTable({
   loading,
 }: OpportunityIntelligenceTableProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [applyingId, setApplyingId] = useState<string | null>(null);
+  const [appliedIds, setAppliedIds] = useState<string[]>([]);
   const resumeVariants = useCareerGraph((s) => s.resumeVariants);
   const setActiveResumeVariant = useCareerGraph((s) => s.setActiveResumeVariant);
+
+  const handleApplyCareerOS = async (e: React.MouseEvent, opp: any, variantBranch: string) => {
+    e.stopPropagation();
+    setApplyingId(opp.id);
+    try {
+      const res = await fetch("/api/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobId: opp.id,
+          company: opp.company,
+          role: opp.role,
+          resumeBranch: variantBranch,
+        }),
+      });
+      if (res.ok) {
+        setAppliedIds((prev) => [...prev, opp.id]);
+        alert(`Successfully applied to ${opp.role} at ${opp.company} via CareerOS!`);
+      } else {
+        alert("Failed to apply. Please try again.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to apply. Please try again.");
+    } finally {
+      setApplyingId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -177,11 +207,23 @@ export function OpportunityIntelligenceTable({
                           )}
                           <button
                             type="button"
+                            disabled={applyingId !== null || appliedIds.includes(opp.id)}
+                            onClick={(e) => handleApplyCareerOS(e, opp, variant?.branch || "main")}
+                            className={`px-3 py-1.5 rounded-md border text-[11px] font-semibold transition-all cursor-pointer ${
+                              appliedIds.includes(opp.id)
+                                ? "bg-success/15 text-success border-success/30 cursor-default"
+                                : "bg-primary text-white border-primary hover:bg-primary-hover active:scale-[0.98]"
+                            } disabled:opacity-60`}
+                          >
+                            {appliedIds.includes(opp.id) ? "Applied ✓" : applyingId === opp.id ? "Applying..." : "Apply via CareerOS"}
+                          </button>
+                          <button
+                            type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               if (variant) setActiveResumeVariant(variant.id);
                             }}
-                            className="px-3 py-1.5 rounded-md border border-hairline text-[11px] font-medium text-text-secondary hover:bg-surface-2"
+                            className="px-3 py-1.5 rounded-md border border-hairline text-[11px] font-medium text-text-secondary hover:bg-surface-2 cursor-pointer"
                           >
                             {jobsCopy.tailorResume}
                           </button>

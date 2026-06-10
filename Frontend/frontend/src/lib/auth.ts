@@ -2,6 +2,7 @@ import { NextAuthOptions, getServerSession } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import LinkedInProvider from "next-auth/providers/linkedin";
 import GithubProvider from "next-auth/providers/github";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { getAuthEnvStatus } from "./auth-config";
 import { getUserProfile, initializeUserProfile } from "./profile-store";
 
@@ -19,6 +20,25 @@ export const authOptions: NextAuthOptions = {
     error: "/sign-in",
   },
   providers: [
+    CredentialsProvider({
+      id: "credentials",
+      name: "Developer Mock Sign-In",
+      credentials: {
+        email: { label: "Email", type: "email", placeholder: "developer@careeros.dev" },
+        name: { label: "Name", type: "text", placeholder: "Alex Developer" },
+        role: { label: "Role", type: "text", placeholder: "candidate" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email) return null;
+        return {
+          id: credentials.email.replace(/[^a-zA-Z0-9]/g, "_"),
+          name: credentials.name || "Mock User",
+          email: credentials.email,
+          image: null,
+          role: credentials.role || "candidate",
+        };
+      }
+    }),
     ...(env.google
       ? [
           GoogleProvider({
@@ -56,6 +76,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           image: user.image,
           provider: account.provider,
+          role: (user as any).role || "candidate",
         });
         return true;
       } catch (error) {

@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getAuthServerSession } from "@/lib/auth";
-import { completeOnboarding } from "@/lib/profile-store";
+import { completeOnboardingWithRole } from "@/lib/profile-store";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   const session = await getAuthServerSession();
 
   if (!session?.user?.id) {
@@ -10,7 +10,16 @@ export async function POST() {
   }
 
   try {
-    const profile = await completeOnboarding(session.user.id);
+    const body = await request.json().catch(() => ({}));
+    const { role, referralCode } = body;
+
+    const selectedRole = role === "recruiter" ? "recruiter" : "candidate";
+
+    const profile = await completeOnboardingWithRole(
+      session.user.id,
+      selectedRole,
+      referralCode
+    );
 
     if (!profile) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });

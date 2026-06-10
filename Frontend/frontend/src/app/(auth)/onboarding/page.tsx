@@ -2,22 +2,19 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, CheckCircle2, ArrowRight } from "lucide-react";
+import { Sparkles, ArrowRight, Briefcase, Building, AlertCircle, Loader2 } from "lucide-react";
 import { slideUpVariants, staggerContainer } from "@/lib/motion";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { onboarding as onboardCopy } from "@/lib/copy";
 
 export default function OnboardingPage() {
-  const [step, setStep] = useState(0);
+  const [role, setRole] = useState<"candidate" | "recruiter">("candidate");
   const [initializing, setInitializing] = useState(true);
-  const [profileReady, setProfileReady] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  
   const router = useRouter();
   const { data: session, status, update } = useSession();
-
-  const steps = onboardCopy.steps.map((s, i) =>
-    i === 0 ? { ...s, detail: session?.user?.email ?? s.detail } : s
-  );
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -26,23 +23,42 @@ export default function OnboardingPage() {
     }
 
     if (status === "authenticated") {
+      // First, initialize the profile in filesystem if not exists
       fetch("/api/user/initialize", { method: "POST" })
-        .then((res) => res.ok && setProfileReady(true))
-        .finally(() => setInitializing(false));
+        .then(() => setInitializing(false))
+        .catch(() => setInitializing(false));
     }
   }, [status, router]);
 
-  useEffect(() => {
-    if (initializing || step >= steps.length) return;
-    const timer = setTimeout(() => setStep((s) => s + 1), 1200);
-    return () => clearTimeout(timer);
-  }, [step, initializing, steps.length]);
+  const handleCompleteOnboarding = async () => {
+    setSubmitting(true);
+    setErrorMessage(null);
+    try {
+      const res = await fetch("/api/user/onboarding/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      });
 
-  const handleEnter = async () => {
-    const res = await fetch("/api/user/onboarding/complete", { method: "POST" });
-    if (res.ok) {
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to complete onboarding");
+      }
+
+      // Update session so middleware sees onboardingComplete = true
       await update({ onboardingComplete: true });
-      router.push("/dashboard");
+      
+      // Let the browser session refresh properly before routing
+      setTimeout(() => {
+        if (role === "recruiter") {
+          router.push("/command-center");
+        } else {
+          router.push("/dashboard");
+        }
+      }, 500);
+    } catch (err: any) {
+      setErrorMessage(err.message || "An unexpected error occurred.");
+      setSubmitting(false);
     }
   };
 
@@ -66,89 +82,104 @@ export default function OnboardingPage() {
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
-        className="w-full max-w-md z-10 flex flex-col items-center px-lg"
+        className="w-full max-w-lg z-10 flex flex-col px-lg py-xl"
       >
-        <div className="w-16 h-16 bg-surface-1 border border-hairline rounded-2xl flex items-center justify-center mb-6 surface-elevated">
-          <Sparkles className="w-7 h-7 text-ai" />
+        <div className="flex items-center gap-2.5 mb-6 justify-center">
+          <div className="w-10 h-10 bg-surface-1 border border-hairline rounded-xl flex items-center justify-center surface-elevated">
+            <Sparkles className="w-5 h-5 text-ai animate-pulse" />
+          </div>
+          <span className="text-lg font-bold tracking-tight">CareerOS Onboarding</span>
         </div>
 
-        <h1 className="text-2xl font-semibold tracking-tight mb-2 text-center">
-          Setting up your career hub
-        </h1>
-        <p className="text-[13px] text-text-secondary mb-4 text-center">
-          {session?.user?.name
-            ? `Welcome, ${session.user.name.split(" ")[0]} — this only takes a moment.`
-            : "Welcome — this only takes a moment."}
-        </p>
-        <div className="w-full h-1 bg-surface-2 rounded-full overflow-hidden mb-8">
-          <motion.div
-            className="h-full bg-ai"
-            initial={{ width: "0%" }}
-            animate={{ width: `${Math.min(100, ((step + 1) / steps.length) * 100)}%` }}
-            transition={{ duration: 0.4 }}
-          />
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold tracking-tight mb-2 text-text-primary">
+            Choose Your Operating Mode
+          </h1>
+          <p className="text-[13px] text-text-secondary max-w-sm mx-auto">
+            Select how you want to interact with CareerOS. You can sign in as a candidate or a recruiter, not both.
+          </p>
         </div>
 
-        <div className="w-full flex flex-col gap-3">
-          {steps.map((item, index) => {
-            const isActive = index === step;
-            const isPast = index < step;
-
-            return (
-              <motion.div
-                key={item.label}
-                variants={slideUpVariants}
-                className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-500 ${
-                  isActive
-                    ? "border-ai bg-ai/5"
-                    : isPast
-                    ? "border-hairline bg-surface-1/50"
-                    : "border-transparent opacity-40"
-                }`}
-              >
-                <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                  {isPast ? (
-                    <CheckCircle2 className="w-5 h-5 text-success" />
-                  ) : isActive ? (
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                      className="w-4 h-4 border-2 border-ai border-t-transparent rounded-full"
-                    />
-                  ) : (
-                    <div className="w-2 h-2 bg-text-tertiary rounded-full" />
-                  )}
-                </div>
-                <div>
-                  <span className={`text-[14px] font-medium block ${isActive ? "text-text-primary" : "text-text-secondary"}`}>
-                    {item.label}
-                  </span>
-                  {item.detail && isPast && (
-                    <span className="text-[11px] text-text-tertiary">{item.detail}</span>
-                  )}
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {step >= steps.length && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-8 flex flex-col items-center gap-3 w-full"
-          >
-            {profileReady && (
-              <p className="text-[11px] text-success text-center">{onboardCopy.welcome}</p>
-            )}
-            <button
-              onClick={handleEnter}
-              className="w-full px-8 py-3 bg-text-primary text-canvas rounded-lg font-semibold text-sm flex items-center justify-center gap-2 hover:bg-text-secondary transition-all active:scale-[0.98]"
-            >
-              {onboardCopy.enter} <ArrowRight className="w-4 h-4" />
-            </button>
-          </motion.div>
+        {errorMessage && (
+          <div className="w-full mb-6 p-3 bg-danger/10 border border-danger/20 rounded-lg flex gap-2 text-left items-start">
+            <AlertCircle className="w-4 h-4 text-danger flex-shrink-0 mt-0.5" />
+            <p className="text-[12px] text-danger leading-relaxed">{errorMessage}</p>
+          </div>
         )}
+
+        {/* Mode Selector Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+          {/* Candidate Card */}
+          <div
+            onClick={() => setRole("candidate")}
+            className={`cursor-pointer p-5 rounded-2xl border transition-all duration-200 flex flex-col gap-3 relative overflow-hidden ${
+              role === "candidate"
+                ? "bg-primary/5 border-primary shadow-[0_0_12px_rgba(var(--color-primary),0.1)]"
+                : "bg-surface-1 border-hairline hover:border-border-strong"
+            }`}
+          >
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+              role === "candidate" ? "bg-primary text-white" : "bg-surface-2 text-text-secondary"
+            }`}>
+              <Briefcase className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-text-primary">Job Candidate</h3>
+              <p className="text-[11px] text-text-secondary mt-1 leading-normal">
+                Search and apply for jobs, tailor your resume variants, and track your interviews in one dashboard.
+              </p>
+            </div>
+            {role === "candidate" && (
+              <div className="absolute top-3 right-3 w-2 h-2 bg-primary rounded-full" />
+            )}
+          </div>
+
+          {/* Recruiter Card */}
+          <div
+            onClick={() => setRole("recruiter")}
+            className={`cursor-pointer p-5 rounded-2xl border transition-all duration-200 flex flex-col gap-3 relative overflow-hidden ${
+              role === "recruiter"
+                ? "bg-ai/5 border-ai shadow-[0_0_12px_rgba(147,51,234,0.15)]"
+                : "bg-surface-1 border-hairline hover:border-border-strong"
+            }`}
+          >
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+              role === "recruiter" ? "bg-ai text-white" : "bg-surface-2 text-text-secondary"
+            }`}>
+              <Building className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-text-primary">Company / Recruiter</h3>
+              <p className="text-[11px] text-text-secondary mt-1 leading-normal">
+                Post job openings, scout candidate profiles completely, send interview invites, and track applicants.
+              </p>
+            </div>
+            {role === "recruiter" && (
+              <div className="absolute top-3 right-3 w-2 h-2 bg-ai rounded-full" />
+            )}
+          </div>
+        </div>
+
+        <button
+          onClick={handleCompleteOnboarding}
+          disabled={submitting}
+          className={`w-full py-3 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer ${
+            role === "recruiter"
+              ? "bg-ai text-white hover:bg-ai-hover"
+              : "bg-primary text-white hover:bg-primary-hover"
+          } disabled:opacity-50`}
+        >
+          {submitting ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              Initializing system...
+            </>
+          ) : (
+            <>
+              Activate CareerOS Dashboard <ArrowRight className="w-3.5 h-3.5" />
+            </>
+          )}
+        </button>
       </motion.div>
     </div>
   );
