@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 import dj_database_url
 
@@ -26,14 +27,13 @@ ALLOWED_HOSTS = os.getenv(
     ""
 ).split(",")
 
-DATABASES = {
+DATABASE_URL = os.getenv("DATABASE_URL")
+REQUIRE_POSTGRES = os.getenv("DJANGO_REQUIRE_POSTGRES", "False") == "True"
 
-    "default": dj_database_url.parse(
-
-        os.getenv("DATABASE_URL")
-
+if REQUIRE_POSTGRES and not DATABASE_URL:
+    raise ImproperlyConfigured(
+        "DJANGO_REQUIRE_POSTGRES=True requires DATABASE_URL to be set."
     )
-}
 
 from pathlib import Path
 import environ
@@ -118,9 +118,14 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': env.db_url('DATABASE_URL', default='sqlite:///db.sqlite3'),
-}
+if REQUIRE_POSTGRES:
+    DATABASES = {
+        'default': env.db_url('DATABASE_URL'),
+    }
+else:
+    DATABASES = {
+        'default': env.db_url('DATABASE_URL', default='sqlite:///db.sqlite3'),
+    }
 
 
 # Password validation

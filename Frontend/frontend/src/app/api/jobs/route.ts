@@ -7,6 +7,7 @@ import path from "path";
 const execFileAsync = promisify(execFile);
 
 const DJANGO_API = process.env.DJANGO_API_URL || "http://127.0.0.1:8000";
+const ALLOW_SQLITE_FALLBACK = process.env.ALLOW_SQLITE_FALLBACK === "true";
 const PROJECT_ROOT = path.resolve(process.cwd(), "..", "..");
 const PYTHON =
   process.env.PYTHON_PATH ||
@@ -24,7 +25,7 @@ async function fetchFromDjango(search: URLSearchParams) {
   const url = `${DJANGO_API}/api/jobs/?${search.toString()}`;
   const res = await fetch(url, {
     headers: { Accept: "application/json" },
-    signal: AbortSignal.timeout(8000),
+    signal: AbortSignal.timeout(20000),
   });
   if (!res.ok) throw new Error(`Django API ${res.status}`);
   return res.json();
@@ -61,7 +62,15 @@ export async function GET(request: NextRequest) {
   try {
     const data = await fetchFromDjango(search);
     return NextResponse.json(data);
-  } catch {
+  } catch (djangoError) {
+    if (!ALLOW_SQLITE_FALLBACK) {
+      const message = djangoError instanceof Error ? djangoError.message : "Failed to load jobs from Django";
+      return NextResponse.json(
+        { jobs: [], total: 0, error: message },
+        { status: 503 }
+      );
+    }
+
     try {
       const data = await fetchFromScript(search);
       return NextResponse.json({ ...data, _source: "local" });
