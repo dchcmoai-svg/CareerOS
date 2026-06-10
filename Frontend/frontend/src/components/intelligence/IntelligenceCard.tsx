@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowUpRight, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -80,7 +80,6 @@ export function IntelligenceCard({
   progress,
 }: IntelligenceCardProps) {
   const styles = domainStyles[domain];
-  const router = useRouter();
 
   const inner = (
     <motion.div
@@ -135,21 +134,7 @@ export function IntelligenceCard({
   );
 
   if (href) {
-    return (
-      <div
-        role="link"
-        tabIndex={0}
-        onClick={() => router.push(href)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            router.push(href);
-          }
-        }}
-      >
-        {inner}
-      </div>
-    );
+    return <Link href={href}>{inner}</Link>;
   }
   return inner;
 }

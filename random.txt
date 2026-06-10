@@ -1,0 +1,2566 @@
+CareerOS Frontend Development Plan
+Analysis of Current State & Target Design
+Based on the Tsenta reference images and your CareerOS repo, I'll help you build a comprehensive frontend that includes:
+
+Dashboard (Home) - Job matches with match percentages, filters, applications table
+Tracker - Kanban-style application tracking (Applied, Ghosted, Interviewing, Rejected, Offer)
+Profile - Resume/Cover letter management, Experience, Education, Skills sections
+Inbox - Messages and notifications
+Settings - Apply settings, resume optimization, billing
+Onboarding Flow - Resume upload mandatory first step
+Let me start by exploring your current codebase structure and then build the frontend systematically.
+
+Step 1: Project Structure Setup
+First, let me create the enhanced frontend structure:
+
+frontend/
+├── src/
+│   ├── components/
+│   │   ├── layout/
+│   │   │   ├── Sidebar.tsx
+│   │   │   ├── DashboardLayout.tsx
+│   │   │   └── UserProfileCard.tsx
+│   │   ├── dashboard/
+│   │   │   ├── JobMatchCard.tsx
+│   │   │   ├── JobFilters.tsx
+│   │   │   ├── ApplicationsTable.tsx
+│   │   │   └── MatchPercentageRing.tsx
+│   │   ├── tracker/
+│   │   │   ├── KanbanBoard.tsx
+│   │   │   ├── KanbanColumn.tsx
+│   │   │   └── ApplicationCard.tsx
+│   │   ├── profile/
+│   │   │   ├── ProfileHeader.tsx
+│   │   │   ├── ProfileCompleteness.tsx
+│   │   │   ├── ResumeSection.tsx
+│   │   │   ├── ExperienceSection.tsx
+│   │   │   └── SkillsSection.tsx
+│   │   ├── inbox/
+│   │   │   └── InboxList.tsx
+│   │   ├── settings/
+│   │   │   ├── SettingsSidebar.tsx
+│   │   │   └── OptimizationSettings.tsx
+│   │   ├── onboarding/
+│   │   │   ├── OnboardingFlow.tsx
+│   │   │   ├── ResumeUploadStep.tsx
+│   │   │   ├── ProfileSetupStep.tsx
+│   │   │   └── PreferencesStep.tsx
+│   │   └── ui/
+│   │       └── (shadcn components)
+│   ├── pages/
+│   │   ├── Dashboard.tsx
+│   │   ├── Tracker.tsx
+│   │   ├── Profile.tsx
+│   │   ├── Inbox.tsx
+│   │   ├── Settings.tsx
+│   │   └── Onboarding.tsx
+│   ├── hooks/
+│   ├── stores/
+│   ├── lib/
+│   └── styles/
+Step 2: Core Components Implementation
+2.1 Dashboard Layout with Sidebar
+// src/components/layout/Sidebar.tsx
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { 
+  LayoutDashboard, 
+  Search, 
+  Mail, 
+  ClipboardList, 
+  User, 
+  Settings,
+  MessageCircle,
+  Chrome,
+  Sparkles,
+  HelpCircle
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface NavItem {
+  icon: React.ElementType;
+  label: string;
+  path: string;
+}
+
+const mainNavItems: NavItem[] = [
+  { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
+  { icon: Search, label: 'Browse jobs', path: '/jobs' },
+  { icon: Mail, label: 'Inbox', path: '/inbox' },
+  { icon: ClipboardList, label: 'Tracker', path: '/tracker' },
+];
+
+const secondaryNavItems: NavItem[] = [
+  { icon: User, label: 'Profile', path: '/profile' },
+  { icon: Settings, label: 'Settings', path: '/settings' },
+];
+
+const integrations = [
+  { icon: MessageCircle, label: 'iMessage' },
+  { icon: MessageCircle, label: 'WhatsApp' },
+  { icon: Chrome, label: 'Chrome' },
+  { icon: Sparkles, label: 'Claude (MCP)' },
+];
+
+interface UserProfile {
+  name: string;
+  applicationsLeft: number;
+  totalFree: number;
+  plan: string;
+}
+
+interface SidebarProps {
+  user: UserProfile;
+}
+
+export const Sidebar: React.FC = ({ user }) => {
+  const location = useLocation();
+
+  const NavLink = ({ item }: { item: NavItem }) => {
+    const isActive = location.pathname === item.path;
+    return (
+      
+        
+        {item.label}
+      
+    );
+  };
+
+  return (
+    
+      {/* Logo */}
+      
+        
+          
+            ∧
+          
+          CareerOS
+        
+      
+
+      {/* Main Navigation */}
+      
+        {mainNavItems.map((item) => (
+          
+        ))}
+        
+        
+        
+        {secondaryNavItems.map((item) => (
+          
+        ))}
+      
+
+      {/* Integrations */}
+      
+        
+          {integrations.map((integration) => (
+            
+              
+              {integration.label}
+            
+          ))}
+        
+      
+
+      {/* Help & Support */}
+      
+        
+          
+          
+            Help & support
+            Send feedback or ask a...
+          
+        
+      
+
+      {/* User Profile Card */}
+      
+        
+          {user.name}
+          
+            Applications left
+            {user.applicationsLeft}
+          
+          {user.totalFree} free
+          {user.plan}
+          
+            
+            Upgrade or buy a pack →
+          
+        
+      
+    
+  );
+};
+2.2 Dashboard Layout Wrapper
+// src/components/layout/DashboardLayout.tsx
+import React from 'react';
+import { Sidebar } from './Sidebar';
+
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+}
+
+export const DashboardLayout: React.FC = ({ children }) => {
+  const user = {
+    name: 'Kumar Kushang',
+    applicationsLeft: 25,
+    totalFree: 25,
+    plan: 'Free plan',
+  };
+
+  return (
+    
+      
+      
+        {children}
+      
+    
+  );
+};
+Step 3: Dashboard Components
+3.1 Match Percentage Ring
+// src/components/dashboard/MatchPercentageRing.tsx
+import React from 'react';
+
+interface MatchPercentageRingProps {
+  percentage: number;
+  size?: 'sm' | 'md' | 'lg';
+}
+
+export const MatchPercentageRing: React.FC = ({ 
+  percentage, 
+  size = 'sm' 
+}) => {
+  const sizes = {
+    sm: { width: 48, strokeWidth: 4, fontSize: 'text-xs' },
+    md: { width: 64, strokeWidth: 5, fontSize: 'text-sm' },
+    lg: { width: 96, strokeWidth: 6, fontSize: 'text-lg' },
+  };
+
+  const { width, strokeWidth, fontSize } = sizes[size];
+  const radius = (width - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (percentage / 100) * circumference;
+
+  const getColor = (pct: number) => {
+    if (pct >= 70) return '#10B981'; // Green
+    if (pct >= 50) return '#F59E0B'; // Yellow
+    return '#EF4444'; // Red
+  };
+
+  return (
+    
+      
+        {/* Background circle */}
+        
+        {/* Progress circle */}
+        
+      
+      
+        {percentage}%
+        Match
+      
+    
+  );
+};
+3.2 Job Match Card
+// src/components/dashboard/JobMatchCard.tsx
+import React from 'react';
+import { MatchPercentageRing } from './MatchPercentageRing';
+import { Building2 } from 'lucide-react';
+
+interface JobMatch {
+  id: string;
+  title: string;
+  location: string;
+  postedTime: string;
+  matchPercentage: number;
+  skills: string[];
+  additionalSkills?: number;
+  company: {
+    name: string;
+    logo?: string;
+  };
+  color: 'mint' | 'peach' | 'lavender' | 'cream' | 'sage';
+}
+
+interface JobMatchCardProps {
+  job: JobMatch;
+  onApply: (jobId: string) => void;
+  onPass: (jobId: string) => void;
+}
+
+const colorClasses = {
+  mint: 'bg-emerald-50 border-emerald-200',
+  peach: 'bg-orange-50 border-orange-200',
+  lavender: 'bg-purple-50 border-purple-200',
+  cream: 'bg-amber-50 border-amber-200',
+  sage: 'bg-teal-50 border-teal-200',
+};
+
+export const JobMatchCard: React.FC = ({ job, onApply, onPass }) => {
+  return (
+    
+      {/* Header */}
+      
+        
+          {job.location}
+          {job.postedTime}
+        
+        
+      
+
+      {/* Title */}
+      {job.title}
+
+      {/* Skills */}
+      
+        {job.skills.slice(0, 3).map((skill, index) => (
+          
+            {skill}
+          
+        ))}
+        {job.additionalSkills && job.additionalSkills > 0 && (
+          
+            +{job.additionalSkills}
+          
+        )}
+      
+
+      {/* Footer */}
+      
+        
+          {job.company.logo ? (
+            
+          ) : (
+            
+              
+            
+          )}
+          
+            {job.company.name}
+          
+        
+        
+           onPass(job.id)}
+            className="px-3 py-1.5 text-sm text-gray-600 hover:bg-white/50 rounded-lg transition-colors flex items-center gap-1"
+          >
+            👎 Pass
+          
+           onApply(job.id)}
+            className="px-3 py-1.5 text-sm bg-teal-700 text-white rounded-lg hover:bg-teal-800 transition-colors"
+          >
+            Apply
+          
+        
+      
+    
+  );
+};
+3.3 Job Filters
+// src/components/dashboard/JobFilters.tsx
+import React, { useState } from 'react';
+import { ChevronDown, X, Search } from 'lucide-react';
+
+interface Filter {
+  id: string;
+  label: string;
+  value?: string;
+  isActive?: boolean;
+}
+
+interface JobFiltersProps {
+  onFilterChange: (filters: Record) => void;
+}
+
+export const JobFilters: React.FC = ({ onFilterChange }) => {
+  const [activeFilters, setActiveFilters] = useState([
+    { id: 'location', label: 'Location', value: '1', isActive: true },
+  ]);
+
+  const filterOptions = [
+    { id: 'date', label: 'Date' },
+    { id: 'role', label: 'Role' },
+    { id: 'jobType', label: 'Job Type' },
+    { id: 'workplace', label: 'Workplace' },
+    { id: 'experience', label: 'Max Experience' },
+    { id: 'more', label: 'More' },
+  ];
+
+  const removeFilter = (filterId: string) => {
+    setActiveFilters(prev => prev.filter(f => f.id !== filterId));
+  };
+
+  const clearAllFilters = () => {
+    setActiveFilters([]);
+  };
+
+  return (
+    
+      {/* Search Bar */}
+      
+        
+        
+      
+
+      {/* Filter Pills */}
+      
+        {filterOptions.map((filter) => {
+          const activeFilter = activeFilters.find(f => f.id === filter.id);
+          
+          return (
+            
+              {activeFilter?.isActive && activeFilter.value && (
+                
+                  {activeFilter.value}
+                
+              )}
+              {filter.label}
+              {activeFilter?.isActive ? (
+                 {
+                    e.stopPropagation();
+                    removeFilter(filter.id);
+                  }}
+                />
+              ) : (
+                
+              )}
+            
+          );
+        })}
+
+        {activeFilters.length > 0 && (
+          
+            
+            Clear
+          
+        )}
+
+        {/* Apply Dropdown */}
+        
+          
+            
+            Apply
+            
+          
+        
+      
+    
+  );
+};
+
+import { Settings } from 'lucide-react';
+3.4 Applications Table
+// src/components/dashboard/ApplicationsTable.tsx
+import React, { useState } from 'react';
+import { Search, ExternalLink } from 'lucide-react';
+
+interface Application {
+  id: string;
+  company: {
+    name: string;
+    logo?: string;
+  };
+  resume: string;
+  coverLetter: string;
+  status: 'submitted' | 'in-flight' | 'needs-you' | 'failed' | 'skipped';
+  appliedDate: string;
+}
+
+interface ApplicationsTableProps {
+  applications: Application[];
+}
+
+const statusTabs = [
+  { id: 'all', label: 'All' },
+  { id: 'submitted', label: 'Submitted' },
+  { id: 'in-flight', label: 'In flight' },
+  { id: 'needs-you', label: 'Needs you' },
+  { id: 'failed', label: 'Failed' },
+  { id: 'skipped', label: 'Skipped' },
+];
+
+export const ApplicationsTable: React.FC = ({ applications }) => {
+  const [activeTab, setActiveTab] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const getStatusCount = (status: string) => {
+    if (status === 'all') return applications.length;
+    return applications.filter(app => app.status === status).length;
+  };
+
+  return (
+    
+      {/* Header */}
+      
+        
+          All applications
+          
+            
+              
+              Open tracker
+            
+            
+              ✓ Approve all
+            
+          
+        
+
+        {/* Tabs */}
+        
+          {statusTabs.map((tab) => (
+             setActiveTab(tab.id)}
+              className={`
+                px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                ${activeTab === tab.id
+                  ? 'bg-teal-700 text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+                }
+              `}
+            >
+              {tab.label} {getStatusCount(tab.id)}
+            
+          ))}
+
+          {/* Search */}
+          
+            
+             setSearchQuery(e.target.value)}
+              placeholder="Search company..."
+              className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+            />
+          
+        
+      
+
+      {/* Table */}
+      
+        
+            {applications.length === 0 ? (
+              
+            ) : (
+              applications.map((app) => (
+                
+              ))
+            )}
+          
+          
+            
+              
+                Company
+              
+              
+                Resume
+              
+              
+                Cover Letter
+              
+              
+                Status
+              
+              
+                Applied
+              
+            
+          
+          
+                
+                  No applications match this filter.
+                
+              
+                  
+                    
+                      {app.company.logo ? (
+                        
+                      ) : (
+                        
+                      )}
+                      {app.company.name}
+                    
+                  
+                  {app.resume}
+                  {app.coverLetter}
+                  
+                    
+                      {app.status.replace('-', ' ')}
+                    
+                  
+                  {app.appliedDate}
+                
+        
+      
+    
+  );
+};
+Step 4: Dashboard Page
+// src/pages/Dashboard.tsx
+import React from 'react';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { JobFilters } from '@/components/dashboard/JobFilters';
+import { JobMatchCard } from '@/components/dashboard/JobMatchCard';
+import { ApplicationsTable } from '@/components/dashboard/ApplicationsTable';
+import { Plus, Search, ArrowRight } from 'lucide-react';
+
+const mockJobMatches = [
+  {
+    id: '1',
+    title: 'Software Engineer - 101982',
+    location: 'Irving, TX',
+    postedTime: '9 hours ago',
+    matchPercentage: 72,
+    skills: ['javascript', 'typescript', 'react.js'],
+    additionalSkills: 13,
+    company: { name: 'Caterpillar' },
+    color: 'mint' as const,
+  },
+  {
+    id: '2',
+    title: 'Software Engineer Internship',
+    location: 'Remote',
+    postedTime: '10 hours ago',
+    matchPercentage: 72,
+    skills: ['javascript', 'typescript', 'react.js'],
+    additionalSkills: 13,
+    company: { name: 'Clearwater' },
+    color: 'peach' as const,
+  },
+  {
+    id: '3',
+    title: 'Senior Software Engineer - UI',
+    location: 'Seattle, WA',
+    postedTime: '11 hours ago',
+    matchPercentage: 72,
+    skills: ['typescript', 'react', 'three.js'],
+    additionalSkills: 47,
+    company: { name: 'AIM' },
+    color: 'lavender' as const,
+  },
+  {
+    id: '4',
+    title: 'Mid-Level Software Engineer',
+    location: 'East Riverdale, MD',
+    postedTime: '25 minutes ago',
+    matchPercentage: 71,
+    skills: ['javascript', 'node.js', 'typescript'],
+    additionalSkills: 30,
+    company: { name: 'Belcan' },
+    color: 'cream' as const,
+  },
+  {
+    id: '5',
+    title: 'Growth Engineer',
+    location: 'San Francisco, CA',
+    postedTime: '6 hours ago',
+    matchPercentage: 69,
+    skills: ['python', 'sql', 'data'],
+    company: { name: 'Boundless' },
+    color: 'sage' as const,
+  },
+];
+
+export const Dashboard: React.FC = () => {
+  const handleFilterChange = (filters: Record) => {
+    console.log('Filters changed:', filters);
+  };
+
+  const handleApply = (jobId: string) => {
+    console.log('Apply to job:', jobId);
+  };
+
+  const handlePass = (jobId: string) => {
+    console.log('Pass job:', jobId);
+  };
+
+  return (
+    
+      
+        {/* Filters */}
+        
+
+        {/* Top Job Matches */}
+        
+          
+            Top job matches
+            
+              
+                
+                Add your own
+              
+              
+                
+                Browse jobs
+              
+              
+                Apply to all 5
+                
+              
+            
+          
+
+          {/* Scrollable Job Cards */}
+          
+            {mockJobMatches.map((job) => (
+              
+            ))}
+          
+        
+
+        {/* Applications Table */}
+        
+      
+    
+  );
+};
+Step 5: Tracker Page (Kanban)
+// src/components/tracker/KanbanColumn.tsx
+import React from 'react';
+import { useDrop } from 'react-dnd';
+import { ApplicationCard } from './ApplicationCard';
+
+interface Application {
+  id: string;
+  company: string;
+  position: string;
+  logo?: string;
+  appliedDate: string;
+}
+
+interface KanbanColumnProps {
+  title: string;
+  count: number;
+  color: string;
+  applications: Application[];
+  onDrop: (applicationId: string) => void;
+}
+
+export const KanbanColumn: React.FC = ({
+  title,
+  count,
+  color,
+  applications,
+  onDrop,
+}) => {
+  const [{ isOver }, drop] = useDrop({
+    accept: 'APPLICATION',
+    drop: (item: { id: string }) => onDrop(item.id),
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+    }),
+  });
+
+  const colorClasses: Record = {
+    blue: 'border-blue-500',
+    gray: 'border-gray-400',
+    yellow: 'border-yellow-500',
+    red: 'border-red-500',
+    green: 'border-green-500',
+  };
+
+  return (
+    
+      {/* Column Header */}
+      
+        
+          
+            {title}
+          
+          {count}
+        
+      
+
+      {/* Applications */}
+      
+        {applications.length === 0 ? (
+          No applications
+        ) : (
+          applications.map((app) => (
+            
+          ))
+        )}
+      
+    
+  );
+};
+// src/components/tracker/ApplicationCard.tsx
+import React from 'react';
+import { useDrag } from 'react-dnd';
+import { Building2, MoreHorizontal } from 'lucide-react';
+
+interface Application {
+  id: string;
+  company: string;
+  position: string;
+  logo?: string;
+  appliedDate: string;
+}
+
+interface ApplicationCardProps {
+  application: Application;
+}
+
+export const ApplicationCard: React.FC = ({ application }) => {
+  const [{ isDragging }, drag] = useDrag({
+    type: 'APPLICATION',
+    item: { id: application.id },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  return (
+    
+      
+        
+          {application.logo ? (
+            
+          ) : (
+            
+              
+            
+          )}
+          
+            {application.company}
+            {application.position}
+          
+        
+        
+          
+        
+      
+      Applied {application.appliedDate}
+    
+  );
+};
+// src/pages/Tracker.tsx
+import React, { useState } from 'react';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { KanbanColumn } from '@/components/tracker/KanbanColumn';
+import { Search, Upload, Plus } from 'lucide-react';
+
+interface Application {
+  id: string;
+  company: string;
+  position: string;
+  logo?: string;
+  appliedDate: string;
+  status: 'applied' | 'ghosted' | 'interviewing' | 'rejected' | 'offer';
+}
+
+const initialApplications: Application[] = [];
+
+const columns = [
+  { id: 'applied', title: 'Applied', color: 'blue' },
+  { id: 'ghosted', title: 'Ghosted', color: 'gray' },
+  { id: 'interviewing', title: 'Interviewing', color: 'yellow' },
+  { id: 'rejected', title: 'Rejected', color: 'red' },
+  { id: 'offer', title: 'Offer', color: 'green' },
+];
+
+export const Tracker: React.FC = () => {
+  const [applications, setApplications] = useState(initialApplications);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const moveApplication = (applicationId: string, newStatus: Application['status']) => {
+    setApplications(prev =>
+      prev.map(app =>
+        app.id === applicationId ? { ...app, status: newStatus } : app
+      )
+    );
+  };
+
+  const getApplicationsByStatus = (status: string) => {
+    return applications.filter(app => app.status === status);
+  };
+
+  return (
+    
+      
+        
+          {/* Header */}
+          
+            
+              Tracker
+              
+                
+                 setSearchQuery(e.target.value)}
+                  placeholder="Search companies"
+                  className="pl-10 pr-4 py-2 w-80 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              
+            
+            
+              
+                
+                Import CSV
+              
+              
+                
+                Add application
+              
+            
+          
+
+          {/* Kanban Board */}
+          
+            {columns.map((column) => (
+               moveApplication(appId, column.id as Application['status'])}
+              />
+            ))}
+          
+        
+      
+    
+  );
+};
+Step 6: Profile Page
+// src/components/profile/ProfileCompleteness.tsx
+import React from 'react';
+
+interface ProfileCompletenessProps {
+  percentage: number;
+}
+
+export const ProfileCompleteness: React.FC = ({ percentage }) => {
+  const radius = 45;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (percentage / 100) * circumference;
+
+  return (
+    
+      
+        
+        
+      
+      
+        {percentage}%
+        Complete
+      
+    
+  );
+};
+// src/components/profile/ProfileHeader.tsx
+import React from 'react';
+import { ProfileCompleteness } from './ProfileCompleteness';
+import { MapPin, Mail, Linkedin, Github, ChevronDown, Edit2 } from 'lucide-react';
+
+interface ProfileHeaderProps {
+  name: string;
+  summary?: string;
+  location: string;
+  email: string;
+  linkedIn?: string;
+  github?: string;
+  completeness: number;
+}
+
+export const ProfileHeader: React.FC = ({
+  name,
+  summary,
+  location,
+  email,
+  linkedIn,
+  github,
+  completeness,
+}) => {
+  return (
+    
+      
+        
+          {name}
+          
+          {summary ? (
+            {summary}
+          ) : (
+            
+              
+              Add a 1-2 line summary about yourself...
+            
+          )}
+
+          
+            
+            {location}
+          
+
+          
+            
+              Default
+              
+            
+            
+              +
+              New profile
+            
+          
+
+          
+            
+            {email}
+          
+
+          
+            {linkedIn && (
+              
+                
+                LinkedIn
+              
+            )}
+            {github && (
+              
+                
+                GitHub
+              
+            )}
+          
+        
+
+        
+          
+          
+            
+            Edit
+          
+        
+      
+    
+  );
+};
+// src/components/profile/ResumeSection.tsx
+import React from 'react';
+import { FileText, Eye, Upload, Download, Edit2 } from 'lucide-react';
+
+interface ResumeSectionProps {
+  hasResume: boolean;
+  hasCoverLetter: boolean;
+  onUploadResume: () => void;
+  onPreviewResume: () => void;
+  onDownloadResume: () => void;
+  onEditCoverLetter: () => void;
+}
+
+export const ResumeSection: React.FC = ({
+  hasResume,
+  hasCoverLetter,
+  onUploadResume,
+  onPreviewResume,
+  onDownloadResume,
+  onEditCoverLetter,
+}) => {
+  return (
+    
+      {/* Resume Card */}
+      
+        
+          
+            
+          
+          
+            
+              Resume
+              PDF
+            
+            What we submit on every application.
+            
+              
+                
+                Preview
+              
+              
+                
+                Upload
+              
+              
+                
+                Download
+              
+            
+          
+        
+      
+
+      {/* Cover Letter Card */}
+      
+        
+          
+            
+          
+          
+            Cover letter
+            Customise the letter we attach by default.
+            
+              
+              Preview & edit
+            
+          
+        
+      
+    
+  );
+};
+// src/components/profile/ExperienceSection.tsx
+import React from 'react';
+import { Briefcase, Edit2 } from 'lucide-react';
+
+interface Experience {
+  id: string;
+  title: string;
+  company: string;
+  startDate: string;
+  endDate: string;
+  duration: string;
+  bullets: string[];
+  initials: string;
+  initialsColor: string;
+}
+
+interface ExperienceSectionProps {
+  experiences: Experience[];
+  onEdit: () => void;
+}
+
+export const ExperienceSection: React.FC = ({ experiences, onEdit }) => {
+  return (
+    
+      
+        
+          
+            
+          
+          
+            Experience
+            {experiences.length} roles
+          
+        
+        
+          
+          Edit
+        
+      
+
+      
+        {experiences.map((exp) => (
+          
+            
+              {exp.initials}
+            
+            
+              {exp.title}
+              {exp.company}
+              
+                {exp.startDate} – {exp.endDate} · {exp.duration}
+              
+              
+                {exp.bullets.map((bullet, index) => (
+                  {bullet}
+                ))}
+              
+            
+          
+        ))}
+      
+    
+  );
+};
+// src/pages/Profile.tsx
+import React, { useState } from 'react';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { ProfileHeader } from '@/components/profile/ProfileHeader';
+import { ResumeSection } from '@/components/profile/ResumeSection';
+import { ExperienceSection } from '@/components/profile/ExperienceSection';
+
+const mockExperiences = [
+  {
+    id: '1',
+    title: 'Web Development Lead',
+    company: 'Cyber Peace Corps, KIIT Chapter',
+    startDate: 'Apr 2026',
+    endDate: 'Present',
+    duration: '3 mo',
+    initials: 'CP',
+    initialsColor: 'bg-teal-600',
+    bullets: [
+      'Developed and maintained web interfaces for cyber awareness initiatives, contributing to digital safety outreach campaigns.',
+      'Collaborated with a cross-functional team to design responsive, accessible front-end components using React.js and modern CSS.',
+      'Participated in code reviews and sprint planning, applying agile workflows to deliver features on schedule.',
+    ],
+  },
+  {
+    id: '2',
+    title: 'Web Developer',
+    company: 'USC KIIT (University Student Community)',
+    startDate: 'Oct 2025',
+    endDate: 'Present',
+    duration: '9 mo',
+    initials: 'UK',
+    initialsColor: 'bg-orange-500',
+    bullets: [
+      'Built and maintained the club's member management system, streamlining registration and data retrieval for 100+ members.',
+      'Engineered structured data storage and administrative lookup features, improving operational efficiency for the student organization.',
+      'Implemented scalable architecture for member profiles, roles, and activity tracking using JavaScript and backend data handling.',
+    ],
+  },
+];
+
+const profileSections = [
+  { id: 'profile', label: 'Profile', active: true },
+  { id: 'documents', label: 'Documents' },
+  { id: 'experience', label: 'Experience' },
+  { id: 'education', label: 'Education' },
+  { id: 'skills', label: 'Skills' },
+  { id: 'certifications', label: 'Certifications' },
+  { id: 'projects', label: 'Projects' },
+  { id: 'defaults', label: 'Application defaults' },
+  { id: 'add', label: 'Add section' },
+];
+
+export const Profile: React.FC = () => {
+  const [activeSection, setActiveSection] = useState('profile');
+
+  return (
+    
+      
+        
+          {/* Main Content */}
+          
+            
+
+             console.log('Upload resume')}
+              onPreviewResume={() => console.log('Preview resume')}
+              onDownloadResume={() => console.log('Download resume')}
+              onEditCoverLetter={() => console.log('Edit cover letter')}
+            />
+
+             console.log('Edit experiences')}
+            />
+          
+
+          {/* Right Sidebar Navigation */}
+          
+            
+              
+                {profileSections.map((section) => (
+                  
+                     setActiveSection(section.id)}
+                      className={`
+                        w-full text-left px-3 py-2 text-sm rounded-lg transition-colors
+                        flex items-center gap-2
+                        ${activeSection === section.id
+                          ? 'text-teal-700 font-medium'
+                          : 'text-gray-500 hover:text-gray-700'
+                        }
+                      `}
+                    >
+                      
+                      {section.label}
+                    
+                  
+                ))}
+              
+            
+          
+        
+      
+    
+  );
+};
+Step 7: Onboarding Flow
+// src/components/onboarding/OnboardingFlow.tsx
+import React, { useState } from 'react';
+import { ResumeUploadStep } from './ResumeUploadStep';
+import { ProfileSetupStep } from './ProfileSetupStep';
+import { PreferencesStep } from './PreferencesStep';
+import { Check } from 'lucide-react';
+
+interface OnboardingStep {
+  id: string;
+  title: string;
+  description: string;
+}
+
+const steps: OnboardingStep[] = [
+  { id: 'resume', title: 'Upload Resume', description: 'We'll extract your information' },
+  { id: 'profile', title: 'Complete Profile', description: 'Review and enhance your details' },
+  { id: 'preferences', title: 'Job Preferences', description: 'Tell us what you're looking for' },
+];
+
+export const OnboardingFlow: React.FC = () => {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState([]);
+  const [resumeData, setResumeData] = useState(null);
+
+  const handleStepComplete = (stepIndex: number, data?: any) => {
+    setCompletedSteps(prev => [...prev, stepIndex]);
+    if (stepIndex === 0 && data) {
+      setResumeData(data);
+    }
+    if (stepIndex < steps.length - 1) {
+      setCurrentStep(stepIndex + 1);
+    }
+  };
+
+  const handleFinish = () => {
+    // Navigate to dashboard
+    window.location.href = '/dashboard';
+  };
+
+  return (
+    
+      {/* Header */}
+      
+        
+          
+            
+              ∧
+            
+            CareerOS
+          
+          
+            Skip for now
+          
+        
+      
+
+      {/* Progress Steps */}
+      
+        
+          {steps.map((step, index) => (
+            
+              
+                
+                  {completedSteps.includes(index) ? (
+                    
+                  ) : (
+                    index + 1
+                  )}
+                
+                
+                  
+                    {step.title}
+                  
+                  {step.description}
+                
+              
+              {index < steps.length - 1 && (
+                
+              )}
+            
+          ))}
+        
+
+        {/* Step Content */}
+        
+          {currentStep === 0 && (
+             handleStepComplete(0, data)} />
+          )}
+          {currentStep === 1 && (
+             handleStepComplete(1)} 
+            />
+          )}
+          {currentStep === 2 && (
+            
+          )}
+        
+      
+    
+  );
+};
+// src/components/onboarding/ResumeUploadStep.tsx
+import React, { useState, useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
+import { Upload, FileText, Check, Loader2, AlertCircle } from 'lucide-react';
+
+interface ResumeUploadStepProps {
+  onComplete: (data: any) => void;
+}
+
+export const ResumeUploadStep: React.FC = ({ onComplete }) => {
+  const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'parsing' | 'complete' | 'error'>('idle');
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [parsedData, setParsedData] = useState(null);
+  const [error, setError] = useState(null);
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (!file) return;
+
+    setUploadedFile(file);
+    setUploadState('uploading');
+    setError(null);
+
+    try {
+      // Simulate upload
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setUploadState('parsing');
+
+      // Simulate parsing (In real app, this would call your AI backend)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const mockParsedData = {
+        name: 'Kumar Kushang',
+        email: 'dchcmoai@gmail.com',
+        phone: '+91 XXXXXXXXXX',
+        location: 'Jayant, Madhya Pradesh, India',
+        skills: ['JavaScript', 'React', 'Node.js', 'TypeScript', 'Python'],
+        experience: [
+          {
+            title: 'Web Development Lead',
+            company: 'Cyber Peace Corps',
+            duration: '2023 - Present',
+          },
+        ],
+        education: [
+          {
+            degree: 'B.Tech Computer Science',
+            institution: 'KIIT University',
+            year: '2025',
+          },
+        ],
+      };
+
+      setParsedData(mockParsedData);
+      setUploadState('complete');
+    } catch (err) {
+      setError('Failed to parse resume. Please try again.');
+      setUploadState('error');
+    }
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'application/pdf': ['.pdf'],
+      'application/msword': ['.doc'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+    },
+    maxFiles: 1,
+    maxSize: 10 * 1024 * 1024, // 10MB
+  });
+
+  const handleContinue = () => {
+    onComplete(parsedData);
+  };
+
+  return (
+    
+      
+        Upload your resume
+        
+          We'll use AI to extract your information and create your profile automatically.
+        
+      
+
+      {uploadState === 'idle' || uploadState === 'error' ? (
+        
+          
+          
+            {uploadState === 'error' ? (
+              
+            ) : (
+              
+            )}
+            
+              
+                {isDragActive ? 'Drop your resume here' : 'Drag and drop your resume'}
+              
+              
+                or browse files
+              
+            
+            
+              Supports PDF, DOC, DOCX (max 10MB)
+            
+            {error && (
+              {error}
+            )}
+          
+        
+      ) : (
+        
+          
+            
+              
+            
+            
+              {uploadedFile?.name}
+              
+                {(uploadedFile?.size || 0 / 1024).toFixed(1)} KB
+              
+            
+            {uploadState === 'complete' && (
+              
+                
+              
+            )}
+          
+
+          {/* Progress */}
+          
+            
+            
+            
+          
+
+          {/* Parsed Data Preview */}
+          {uploadState === 'complete' && parsedData && (
+            
+              Extracted Information
+              
+                
+                  Name
+                  {parsedData.name}
+                
+                
+                  Email
+                  {parsedData.email}
+                
+                
+                  Location
+                  {parsedData.location}
+                
+                
+                  Skills
+                  {parsedData.skills.slice(0, 3).join(', ')}...
+                
+              
+            
+          )}
+        
+      )}
+
+      {uploadState === 'complete' && (
+        
+          
+            Continue to Profile Setup
+          
+        
+      )}
+    
+  );
+};
+
+const ProgressItem: React.FC<{ label: string; status: 'pending' | 'active' | 'complete' }> = ({
+  label,
+  status,
+}) => (
+  
+    {status === 'active' && }
+    {status === 'complete' && (
+      
+        
+      
+    )}
+    {status === 'pending' && }
+    
+      {label}
+    
+  
+);
+// src/components/onboarding/ProfileSetupStep.tsx
+import React, { useState } from 'react';
+import { User, MapPin, Mail, Phone, Plus, X } from 'lucide-react';
+
+interface ProfileSetupStepProps {
+  resumeData: any;
+  onComplete: () => void;
+}
+
+export const ProfileSetupStep: React.FC = ({ resumeData, onComplete }) => {
+  const [formData, setFormData] = useState({
+    name: resumeData?.name || '',
+    email: resumeData?.email || '',
+    phone: resumeData?.phone || '',
+    location: resumeData?.location || '',
+    linkedin: '',
+    github: '',
+    skills: resumeData?.skills || [],
+  });
+
+  const [newSkill, setNewSkill] = useState('');
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const addSkill = () => {
+    if (newSkill.trim() && !formData.skills.includes(newSkill.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        skills: [...prev.skills, newSkill.trim()],
+      }));
+      setNewSkill('');
+    }
+  };
+
+  const removeSkill = (skill: string) => {
+    setFormData(prev => ({
+      ...prev,
+      skills: prev.skills.filter((s: string) => s !== skill),
+    }));
+  };
+
+  return (
+    
+      
+        Complete your profile
+        
+          Review the information we extracted and make any necessary changes.
+        
+      
+
+      
+        {/* Basic Info */}
+        
+          
+            Full Name
+            
+              
+               handleInputChange('name', e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+            
+          
+          
+            Email
+            
+              
+               handleInputChange('email', e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+            
+          
+          
+            Phone
+            
+              
+               handleInputChange('phone', e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+            
+          
+          
+            Location
+            
+              
+               handleInputChange('location', e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+            
+          
+        
+
+        {/* Social Links */}
+        
+          
+            LinkedIn URL
+             handleInputChange('linkedin', e.target.value)}
+              placeholder="https://linkedin.com/in/..."
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            />
+          
+          
+            GitHub URL
+             handleInputChange('github', e.target.value)}
+              placeholder="https://github.com/..."
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            />
+          
+        
+
+        {/* Skills */}
+        
+          Skills
+          
+            {formData.skills.map((skill: string) => (
+              
+                {skill}
+                 removeSkill(skill)}
+                  className="hover:bg-teal-200 rounded-full p-0.5"
+                >
+                  
+                
+              
+            ))}
+          
+          
+             setNewSkill(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addSkill()}
+              placeholder="Add a skill..."
+              className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            />
+            
+              
+            
+          
+        
+      
+
+      
+        
+          Continue to Preferences
+        
+      
+    
+  );
+};
+// src/components/onboarding/PreferencesStep.tsx
+import React, { useState } from 'react';
+import { MapPin, Briefcase, DollarSign, Building2 } from 'lucide-react';
+
+interface PreferencesStepProps {
+  onComplete: () => void;
+}
+
+const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Internship', 'Freelance'];
+const workplaceTypes = ['Remote', 'Hybrid', 'On-site'];
+const experienceLevels = ['Entry Level', 'Mid Level', 'Senior', 'Lead', 'Executive'];
+
+export const PreferencesStep: React.FC = ({ onComplete }) => {
+  const [preferences, setPreferences] = useState({
+    roles: [] as string[],
+    locations: [] as string[],
+    jobTypes: [] as string[],
+    workplaceTypes: [] as string[],
+    experienceLevel: '',
+    salaryMin: '',
+    salaryMax: '',
+  });
+
+  const [roleInput, setRoleInput] = useState('');
+  const [locationInput, setLocationInput] = useState('');
+
+  const toggleSelection = (field: 'jobTypes' | 'workplaceTypes', value: string) => {
+    setPreferences(prev => ({
+      ...prev,
+      [field]: prev[field].includes(value)
+        ? prev[field].filter(v => v !== value)
+        : [...prev[field], value],
+    }));
+  };
+
+  const addRole = () => {
+    if (roleInput.trim() && !preferences.roles.includes(roleInput.trim())) {
+      setPreferences(prev => ({
+        ...prev,
+        roles: [...prev.roles, roleInput.trim()],
+      }));
+      setRoleInput('');
+    }
+  };
+
+  const addLocation = () => {
+    if (locationInput.trim() && !preferences.locations.includes(locationInput.trim())) {
+      setPreferences(prev => ({
+        ...prev,
+        locations: [...prev.locations, locationInput.trim()],
+      }));
+      setLocationInput('');
+    }
+  };
+
+  return (
+    
+      
+        Job Preferences
+        
+          Tell us what you're looking for so we can find the best matches.
+        
+      
+
+      
+        {/* Target Roles */}
+        
+          
+            
+            Target Roles
+          
+          
+            {preferences.roles.map((role) => (
+              
+                {role}
+              
+            ))}
+          
+          
+             setRoleInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addRole()}
+              placeholder="e.g., Software Engineer, Product Manager..."
+              className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            />
+            
+              Add
+            
+          
+        
+
+        {/* Preferred Locations */}
+        
+          
+            
+            Preferred Locations
+          
+          
+            {preferences.locations.map((location) => (
+              
+                {location}
+              
+            ))}
+          
+          
+             setLocationInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addLocation()}
+              placeholder="e.g., San Francisco, New York, Remote..."
+              className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            />
+            
+              Add
+            
+          
+        
+
+        {/* Job Types */}
+        
+          
+            
+            Job Type
+          
+          
+            {jobTypes.map((type) => (
+               toggleSelection('jobTypes', type)}
+                className={`
+                  px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                  ${preferences.jobTypes.includes(type)
+                    ? 'bg-teal-700 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }
+                `}
+              >
+                {type}
+              
+            ))}
+          
+        
+
+        {/* Workplace Type */}
+        
+          Workplace Type
+          
+            {workplaceTypes.map((type) => (
+               toggleSelection('workplaceTypes', type)}
+                className={`
+                  px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                  ${preferences.workplaceTypes.includes(type)
+                    ? 'bg-teal-700 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }
+                `}
+              >
+                {type}
+              
+            ))}
+          
+        
+
+        {/* Experience Level */}
+        
+          Experience Level
+          
+            {experienceLevels.map((level) => (
+               setPreferences(prev => ({ ...prev, experienceLevel: level }))}
+                className={`
+                  px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                  ${preferences.experienceLevel === level
+                    ? 'bg-teal-700 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }
+                `}
+              >
+                {level}
+              
+            ))}
+          
+        
+
+        {/* Salary Range */}
+        
+          
+            
+            Salary Expectations (USD/year)
+          
+          
+             setPreferences(prev => ({ ...prev, salaryMin: e.target.value }))}
+              placeholder="Minimum (e.g., 80000)"
+              className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            />
+             setPreferences(prev => ({ ...prev, salaryMax: e.target.value }))}
+              placeholder="Maximum (e.g., 150000)"
+              className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            />
+          
+        
+      
+
+      
+        
+          Complete Setup & Go to Dashboard
+        
+      
+    
+  );
+};
+Step 8: Settings Page
+// src/pages/Settings.tsx
+import React, { useState } from 'react';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { 
+  Settings as SettingsIcon, 
+  Lock, 
+  Bell, 
+  CreditCard, 
+  Users, 
+  Mail,
+  ChevronRight
+} from 'lucide-react';
+
+interface SettingSection {
+  id: string;
+  icon: React.ElementType;
+  title: string;
+  description: string;
+}
+
+const settingSections: SettingSection[] = [
+  { id: 'apply', icon: SettingsIcon, title: 'Apply Settings', description: 'Configure resume optimization and submit behavior' },
+  { id: 'workday', icon: Lock, title: 'Workday Password', description: 'Store your Workday password securely for automated applications' },
+  { id: 'notifications', icon: Bell, title: 'Email Notifications', description: 'Manage daily job recommendation emails' },
+  { id: 'billing', icon: CreditCard, title: 'Plans & Billing', description: 'Manage your subscription and billing information' },
+  { id: 'referrals', icon: Users, title: 'Referrals', description: 'Invite a friend, both get 200 free applications' },
+  { id: 'email', icon: Mail, title: 'Email Integrations', description: 'Connect your email for better tracking' },
+];
+
+export const Settings: React.FC = () => {
+  const [activeSection, setActiveSection] = useState('apply');
+  const [resumeOptimization, setResumeOptimization] = useState<'off' | 'honest' | 'aggressive'>('honest');
+  const [coverLetterOptimization, setCoverLetterOptimization] = useState<'off' | 'honest' | 'aggressive'>('honest');
+  const [autoApprove, setAutoApprove] = useState(true);
+
+  return (
+    
+      
+        
+          Settings
+          Manage your account and integrations
+        
+
+        
+          {/* Settings Navigation */}
+          
+            {settingSections.map((section) => (
+               setActiveSection(section.id)}
+                className={`
+                  w-full flex items-start gap-3 p-4 rounded-xl text-left transition-colors
+                  ${activeSection === section.id
+                    ? 'bg-gray-100'
+                    : 'hover:bg-gray-50'
+                  }
+                `}
+              >
+                
+                  
+                
+                
+                  {section.title}
+                  {section.description}
+                
+                
+              
+            ))}
+          
+
+          {/* Settings Content */}
+          
+            {activeSection === 'apply' && (
+              
+                
+                  
+                    
+                  
+                  
+                    Apply Settings
+                    Configure how your applications are submitted
+                  
+                
+
+                {/* Resume Optimization */}
+                
+                  Resume Optimization
+                  
+                    
+                       setResumeOptimization('off')}
+                        className="mt-1"
+                      />
+                      
+                        Off
+                        Use your original resume as-is
+                      
+                    
+                    
+                       setResumeOptimization('honest')}
+                        className="mt-1 accent-teal-600"
+                      />
+                      
+                        Honest
+                        Reorder and highlight relevant experience for each job
+                      
+                    
+                    
+                       setResumeOptimization('aggressive')}
+                        className="mt-1"
+                      />
+                      
+                        Aggressive
+                        Rewrite and tailor content to match the job description
+                      
+                    
+                  
+                
+
+                {/* Auto-approve */}
+                
+                  
+                     setAutoApprove(e.target.checked)}
+                      className="w-5 h-5 rounded accent-teal-600"
+                    />
+                    
+                      Auto-approve (skip preview steps)
+                    
+                  
+                
+
+                {/* Cover Letter Optimization */}
+                
+                  Cover Letter Optimization
+                  
+                    
+                       setCoverLetterOptimization('off')}
+                        className="mt-1"
+                      />
+                      
+                        Off
+                        Don't generate a cover letter
+                      
+                    
+                    
+                       setCoverLetterOptimization('honest')}
+                        className="mt-1 accent-teal-600"
+                      />
+                      
+                        Honest
+                        Tailor tone and emphasis to each job, no fabrication
+                      
+                    
+                  
+                
+              
+            )}
+          
+        
+      
+    
+  );
+};
+Step 9: Router Setup
+// src/App.tsx
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Dashboard } from './pages/Dashboard';
+import { Tracker } from './pages/Tracker';
+import { Profile } from './pages/Profile';
+import { Inbox } from './pages/Inbox';
+import { Settings } from './pages/Settings';
+import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
+
+// Auth check (implement your actual auth logic)
+const useAuth = () => {
+  // For now, mock authenticated state
+  return { isAuthenticated: true, hasCompletedOnboarding: true };
+};
+
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, hasCompletedOnboarding } = useAuth();
+
+  if (!isAuthenticated) {
+    return ;
+  }
+
+  if (!hasCompletedOnboarding) {
+    return ;
+  }
+
+  return <>{children};
+};
+
+const App: React.FC = () => {
+  return (
+    
+      
+        {/* Onboarding */}
+        } />
+
+        {/* Protected Routes */}
+        
+              
+            
+          }
+        />
+        
+              
+            
+          }
+        />
+        
+              
+            
+          }
+        />
+        
+              
+            
+          }
+        />
+        
+              
+            
+          }
+        />
+        
+               {/* Or create a separate BrowseJobs page */}
+            
+          }
+        />
+
+        {/* Default redirect */}
+        } />
+        } />
+      
+    
+  );
+};
+
+export default App;
+Step 10: Required Dependencies
+Add these to your package.json:
+
+{
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.x",
+    "react-dnd": "^16.x",
+    "react-dnd-html5-backend": "^16.x",
+    "react-dropzone": "^14.x",
+    "lucide-react": "^0.x",
+    "clsx": "^2.x",
+    "tailwind-merge": "^2.x",
+    "@radix-ui/react-dialog": "^1.x",
+    "@radix-ui/react-dropdown-menu": "^2.x",
+    "@radix-ui/react-popover": "^1.x",
+    "framer-motion": "^11.x",
+    "zustand": "^4.x"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.x",
+    "postcss": "^8.x",
+    "autoprefixer": "^10.x",
+    "@types/react": "^18.x",
+    "@types/react-dom": "^18.x",
+    "typescript": "^5.x"
+  }
+}
+Step 11: Tailwind Config
+// tailwind.config.js
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  darkMode: ["class"],
+  content: [
+    './pages/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './app/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        teal: {
+          50: '#f0fdfa',
+          100: '#ccfbf1',
+          200: '#99f6e4',
+          300: '#5eead4',
+          400: '#2dd4bf',
+          500: '#14b8a6',
+          600: '#0d9488',
+          700: '#0f766e',
+          800: '#115e59',
+          900: '#134e4a',
+        },
+      },
+      borderRadius: {
+        lg: '0.5rem',
+        xl: '0.75rem',
+        '2xl': '1rem',
+      },
+    },
+  },
+  plugins: [require("tailwindcss-animate")],
+}
+Summary
+This implementation provides:
+
+Dashboard - Job matches with colorful cards, match percentage rings, filters, and applications table
+Tracker - Drag-and-drop Kanban board for application tracking
+Profile - Complete profile management with resume/cover letter sections, experience, skills
+Settings - Resume optimization settings, notifications, billing
+Onboarding - 3-step flow: Resume upload → Profile setup → Job preferences
+Key Features:
+Tsenta-inspired design with teal color scheme
+Responsive sidebar with user profile card
+Match percentage circular progress indicators
+Drag-and-drop job application tracking
+Resume upload with AI parsing simulation
+Profile completeness indicator
+Clean, modern UI with smooth transitions
+Next Steps:
+Connect to your backend API for real data
+Implement actual resume parsing with your AI service
+Add authentication flow
+Integrate with job APIs
+Add real-time notifications
+Implement email integrations
+Would you like me to elaborate on any specific component or add additional features?
+
+
+
+
+Looking at Tsenta's dashboard screenshots, the biggest realization is:
+Tsenta is not actually hard to surpass.
+What's difficult is not the UI.
+It's the automation infrastructure underneath.
+
+What Tsenta Actually Contains
+From the screenshots:
+Dashboard
+Contains:
+
+
+Job matches
+
+
+Search/filter bar
+
+
+Apply all button
+
+
+Match %
+
+
+Applications table
+
+
+That's it.
+
+Tracker
+Contains:
+
+
+Applied
+
+
+Ghosted
+
+
+Interviewing
+
+
+Rejected
+
+
+Offer
+
+
+Just a kanban.
+
+Profile
+Contains:
+
+
+Resume
+
+
+Cover letter
+
+
+Experience
+
+
+Skills
+
+
+Education
+
+
+Basically a resume builder.
+
+Settings
+Contains:
+
+
+Resume optimization
+
+
+Cover letter optimization
+
+
+Auto apply settings
+
+
+Billing
+
+
+Again relatively standard.
+
+What Tsenta Does Better
+Not UI.
+Not UX.
+Not Design.
+Not Intelligence.
+What they do better:
+User uploads resume       ↓System finds jobs       ↓System tailors resume       ↓System applies       ↓System tracks
+The magic is:
+AUTOMATION
+
+Where CareerOS Should Beat Them
+You should NOT copy this dashboard.
+If you do:
+CareerOS = Tsenta clone
+Instead:
+CareerOS = Career Intelligence Layer+Automation Layer
+
+Biggest Weakness In Tsenta
+Look carefully.
+Everything is flat.
+JobJobJobJobJob
+No intelligence hierarchy.
+No explanation.
+No graph.
+No memory.
+No orchestration.
+
+What CareerOS Dashboard Should Feel Like
+Not:
+Job Board
+More:
+Mission Control
+Think:
+
+
+Linear
+
+
+Vercel
+
+
+Stripe
+
+
+Raycast
+
+
+Arc Browser
+
+
+
+CareerOS Dashboard
+Instead of:
+72% MatchApply
+show:
+Senior Frontend EngineerStripe91% MatchWhy?✓ React✓ TypeScript✓ Next.js✓ Remote preferenceMissing✗ GraphQLResume Variant:frontend-optimized-v3Recommended Action:Apply immediately
+
+What The Dashboard Should Contain
+Left Side
+Professional Graph Status
+Profile Health92%Resume Branches10Skills43Projects7Experiences4
+
+Center
+Opportunity Feed
+High PriorityVery High MatchNeeds Resume UpdateRecruiter InterestRecently Opened
+
+Right Side
+AI Career Copilot
+3 opportunities require action2 recruiters searched profiles like yoursResume branch frontend-v2 underperformingRecommendation:create frontend-v3
+
+Tracker Should Be Better Than Tsenta
+Tsenta:
+AppliedGhostedInterviewingRejectedOffer
+Very basic.
+
+CareerOS:
+AppliedResponse Probability82%Expected Response4 daysHiring VelocityFastRiskLow
+Every application becomes intelligent.
+
+Profile Should Become Career Vault
+Not:
+Profile
+Instead:
+Career Vault
+Contains:
+Resume Branches
+GeneralFrontendBackendAI/MLProductStaff Engineer
+
+Projects
+Experience
+Publications
+Certifications
+Speaking
+Awards
+Volunteer
+All feeding:
+Professional Graph
+
+Missing Piece From Your Current Build
+You already built:
+Professional GraphResume IntelligenceResume VariantsATS IntelligenceEmbeddings
+But the UI still behaves like:
+Resume Upload App
+You need the UI to expose the intelligence.
+
+If I Were Running CareerOS
+My next frontend sprint would be:
+Sprint A
+Replace Dashboard with:
+Mission Control
+Sections:
+Profile HealthOpportunity FeedApplication IntelligenceRecruiter SignalsAI Copilot
+
+Sprint B
+Replace Profile with:
+Career Vault
+showing:
+GraphVariantsProjectsCertificationsExperiencePublications
+
+Sprint C
+Replace Tracker with:
+Pipeline Intelligence
+instead of simple Kanban.
+
+Sprint D
+Add AI Copilot Panel
+Persistent right-side panel:
+CareerOS AssistantResume AgentJobs AgentApplications AgentMarketplace Agent
+This is where your future MCP + multi-agent system becomes visible.
+
+The biggest opportunity is not making a prettier Tsenta.
+It's making users feel:
+Tsenta = automation toolCareerOS = career operating system
+The moment someone opens CareerOS, they should feel they're looking at a live intelligence graph managing their career, not a list of jobs and applications.
+
+
+For CareerOS, the dashboard should not be a page that shows data.
+It should be a page that answers:
+What should I do next?
+That's what is currently missing from almost every dashboard mockup I've seen.
+
+1. Career Health (Missing)
+Right now you show:
+JobsApplicationsResume
+But users don't know:
+Am I actually competitive?
+Add:
+Career Health Card
+Career Health88/100Resume Quality        91Market Demand         83Profile Completeness  94Interview Readiness   76
+Clicking opens detailed diagnostics.
+
+2. Opportunity Radar (Missing)
+Not jobs.
+Opportunity radar.
+126 opportunities found32 High Priority18 Urgent9 Closing Soon67 Worth Tracking
+
+3. AI Next Actions (Missing)
+Probably the most important thing.
+When users open dashboard:
+Recommended Actions1. Apply to Stripe2. Update React project metrics3. Create AI Engineer resume branch4. Follow up Amazon application
+This should feel like GitHub notifications.
+
+4. Resume Intelligence Widget (Missing)
+You built:
+Resume IntelligenceResume VariantsATS Intelligence
+but users cannot see it.
+Dashboard should show:
+Resume IntelligenceGeneral Resume83 ATSFrontend Resume91 ATSAI Resume77 ATSRecommended:Improve AI Resume
+
+5. Opportunity Explanation (Missing)
+Not:
+91% Match
+Instead:
+Why 91%?ReactNext.jsTypeScriptRemote preferenceMissing:GraphQL
+
+6. Market Pulse (Missing)
+This becomes huge later.
+Market PulseFrontend Demand ↑ 12%AI Roles ↑ 31%Remote Roles ↓ 4%Top Hiring Cities:BangaloreHyderabadRemote
+This is where CareerOS starts feeling alive.
+
+7. Recruiter Signals (Missing)
+Future marketplace feature.
+Recruiter Activity3 profile searches2 matching recruiters1 company bookmarked your profile
+
+8. Pipeline Intelligence (Missing)
+Tsenta tracker:
+AppliedInterviewingOffer
+CareerOS dashboard:
+Pipeline Health12 ActiveExpected Responses:4 this weekAt Risk:3Ghost Probability:2
+
+9. Career Vault Snapshot (Missing)
+You already built Professional Graph.
+Show it.
+Career VaultSkills: 47Projects: 9Experience: 4Certifications: 7Resume Variants: 10
+
+10. AI Copilot (Missing)
+Persistent.
+Not chatbot.
+Action center.
+CareerOS AssistantYou are strongest for:FrontendFull StackWeakest area:System DesignRecommendation:Add architecture project
+
+11. Weekly Progress (Missing)
+People love progress.
+This WeekApplied: 12Responses: 3Interviews: 1Resume Score: +4Profile Views: +9
+
+12. CareerOS Graph Widget (Unique)
+No competitor has this.
+Professional GraphUser ├─ Skills ├─ Projects ├─ Experience ├─ Resume Variants ├─ Applications └─ Market Signals
+Visualized as a living network.
+
+13. Command Center (Missing)
+Like Linear.
+Press:
+⌘ + K
+and:
+Apply to top matchesGenerate AI resumeCreate resume branchShow interview prepFind remote jobsUpdate profile
+
+14. Automation Queue (Missing)
+When autonomous apply arrives.
+Automation QueueReady to Apply8Awaiting Review3Submitted Today12
+
+15. Confidence Score (Missing)
+Extremely powerful.
+For every recommendation:
+Success ProbabilityStripe82%Vercel79%Linear75%
+Not just match score.
+
+If I redesigned the CareerOS dashboard today
+Layout:
+┌──────────────────────────────────────────────┐│ Career Health     Opportunity Radar          │├──────────────────────────────────────────────┤│ AI Next Actions   Market Pulse               │├──────────────────────────────────────────────┤│ Top Opportunities (Explainable Matches)      │├──────────────────────────────────────────────┤│ Pipeline Health  Recruiter Signals           │├──────────────────────────────────────────────┤│ Career Vault      Automation Queue           │├──────────────────────────────────────────────┤│ Persistent AI Copilot                         │└──────────────────────────────────────────────┘
+The biggest missing thing is intelligence visibility.
+You have already started building Professional Graph, Resume Intelligence, ATS Intelligence, Variants, Embeddings, and Application Packets. The dashboard should expose those systems visually. Otherwise CareerOS looks like a prettier job board even though the backend is becoming much more sophisticated.

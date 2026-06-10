@@ -261,7 +261,7 @@ export function MissionControlDashboard({ userName }: MissionControlDashboardPro
                   <p className="text-lg font-bold text-text-primary tabular-nums">4</p>
                 </div>
               </div>
-            </IntelligenceCard>
+              </IntelligenceCard>
 
             <IntelligenceCard
               title="Referral Rewards"
@@ -276,7 +276,7 @@ export function MissionControlDashboard({ userName }: MissionControlDashboardPro
                     <p className="text-text-tertiary font-medium">Your Referral Code</p>
                     <p className="text-xs font-bold text-primary mt-0.5 select-all truncate">{profile?.referralCode || "—"}</p>
                   </div>
-                  <button 
+                  <button
                     onClick={() => {
                       if (profile?.referralCode) {
                         navigator.clipboard.writeText(profile.referralCode);
