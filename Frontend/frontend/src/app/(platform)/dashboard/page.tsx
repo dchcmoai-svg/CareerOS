@@ -28,5 +28,3 @@ export default function DashboardPage() {
 
   return <MissionControlDashboard userName={firstName} />;
 }
-  return <MissionControlDashboard userName={firstName} />;
-}

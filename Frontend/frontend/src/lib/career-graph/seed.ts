@@ -13,25 +13,25 @@ import { PIPELINE_ITEMS } from "@/lib/pipeline-data";
 
 export const RESUME_VARIANTS: ResumeVariant[] = [
   {
-    id: "rv-stripe",
-    branch: "feature/stripe-frontend",
-    target: "Stripe & payments UI roles",
+    id: "rv-swiggy",
+    branch: "feature/swiggy-frontend",
+    target: "Swiggy & product frontend roles",
+    score: 85,
+    performanceNote: "Best response rate on UI and product engineer roles",
+  },
+  {
+    id: "rv-inmobi",
+    branch: "feature/inmobi-systems",
+    target: "InMobi & systems backend roles",
     score: 82,
-    performanceNote: "Best response rate on frontend infra roles",
+    performanceNote: "Strong fit for high-concurrency backend roles",
   },
   {
-    id: "rv-staff",
-    branch: "feature/staff-generalist",
-    target: "Staff / generalist engineering",
-    score: 91,
-    performanceNote: "Highest match scores across product companies",
-  },
-  {
-    id: "rv-rust",
-    branch: "feature/rust-systems",
-    target: "Systems & platform roles",
-    score: 78,
-    performanceNote: "Growing — add 2 more systems keywords",
+    id: "rv-general",
+    branch: "feature/general-sde",
+    target: "General software engineering (SDE)",
+    score: 92,
+    performanceNote: "Highest match score for general product developer roles",
   },
 ];
 
@@ -176,20 +176,21 @@ export function enrichOpportunity(job: {
   category?: string;
   source?: string;
 }): IntelligenceOpportunity {
-  const best =
-    job.fitScore >= 90 && job.company.toLowerCase().includes("stripe")
-      ? "rv-stripe"
-      : "rv-staff";
-  const variant = RESUME_VARIANTS.find((v) => v.id === best) ?? RESUME_VARIANTS[1];
+  const roleLower = job.role.toLowerCase();
+  const isFrontend = roleLower.includes("front") || roleLower.includes("react") || roleLower.includes("ui") || roleLower.includes("ux") || roleLower.includes("design");
+  const isBackendOrSystems = roleLower.includes("back") || roleLower.includes("system") || roleLower.includes("devops") || roleLower.includes("sre") || roleLower.includes("infra") || roleLower.includes("cloud");
+
+  const best = isFrontend ? "rv-swiggy" : (isBackendOrSystems ? "rv-inmobi" : "rv-general");
+  const variant = RESUME_VARIANTS.find((v) => v.id === best) ?? RESUME_VARIANTS[2];
 
   return {
     ...job,
     bestResumeVariantId: variant.id,
     missingSkills:
       job.fitScore < 82
-        ? ["Distributed Systems", "GraphQL"]
+        ? ["System Design", "Next.js"]
         : job.fitScore < 88
-          ? ["Distributed Systems"]
+          ? ["System Design"]
           : [],
     salaryAligned: job.compensation !== "Salary not listed",
     recommendedAction:

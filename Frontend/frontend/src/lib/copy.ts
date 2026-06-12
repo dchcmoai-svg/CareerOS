@@ -176,25 +176,17 @@ export const profile = {
 
 export const settings = {
   title: "Settings",
-  subtitle: "Privacy, applications, notifications, and how your career assistant helps you.",
-  pageGuide: "Changes apply across jobs, applications, and recruiter visibility.",
+  subtitle: "Manage your account and integrations",
+  pageGuide: "Changes apply across jobs, applications, and integrations.",
   sections: {
-    connections: "Connected accounts",
-    privacy: "Privacy & visibility",
-    applications: "Application preferences",
-    assistant: "Career assistant",
-    notifications: "Notifications",
+    apply: "Apply Settings",
+    workday: "Workday Password",
+    notifications: "Email Notifications",
+    billing: "Plans & Billing",
+    referrals: "Referrals",
+    emailIntegration: "Email Integration",
+    account: "Account Settings",
   },
-  stealth: "Hide from current employer",
-  stealthHint: "Recruiters at your company won't see your profile.",
-  blocked: "Blocked companies",
-  salary: "Minimum salary",
-  workplace: "Work style",
-  memory: "Remember my preferences",
-  memoryHint: "Helps suggestions improve over time — you can clear this anytime.",
-  notifyRecruiter: "Recruiter views & messages",
-  notifyResume: "Resume improvement tips",
-  notifyFollowUp: "Follow-up reminders",
 } as const;
 
 export const marketplace = {
