@@ -9,11 +9,52 @@ interface AtsScorecardProps {
 }
 
 export function AtsScorecard({ activeBranch }: AtsScorecardProps) {
-  const isStripe = activeBranch === "feature/stripe-frontend";
-  const targetRole = isStripe ? "Stripe — Frontend Engineer" : "General engineering roles";
+  const isSwiggy = activeBranch === "feature/swiggy-frontend";
+  const isInMobi = activeBranch === "feature/inmobi-systems";
+
+  let targetRole = "General SDE roles";
+  let score = 92;
+  let scoreText: string = resumeCopy.scoreReady;
+  let keywordsScore = "89%";
+  let keywordsProgress = "w-[89%]";
+  let keywordsHint = "Core SDE keywords for general roles are covered.";
+  let readabilityScore = "96%";
+  let readabilityProgress = "w-[96%]";
+  let readabilityHint = "Sections are clean and easy to scan in 5 seconds.";
+  let impactScore = "88%";
+  let impactProgress = "w-[88%]";
+  let impactHint = "Strong use of project action verbs and outcomes.";
+
+  if (isSwiggy) {
+    targetRole = "Swiggy — Frontend Developer";
+    score = 85;
+    scoreText = "Needs 2 optimizations";
+    keywordsScore = "78%";
+    keywordsProgress = "w-[78%]";
+    keywordsHint = 'Add "Next.js", "Page Speed Metrics", or "WASM" keywords.';
+    readabilityScore = "92%";
+    readabilityProgress = "w-[92%]";
+    readabilityHint = "Great structural layout; clean markdown format.";
+    impactScore = "65%";
+    impactProgress = "w-[65%]";
+    impactHint = "Add web performance speed metrics to CPC projects.";
+  } else if (isInMobi) {
+    targetRole = "InMobi — Systems Backend Engineer";
+    score = 82;
+    scoreText = "Needs 3 optimizations";
+    keywordsScore = "72%";
+    keywordsProgress = "w-[72%]";
+    keywordsHint = 'Add "System Design", "Concurrency", or "Kafka" keywords.';
+    readabilityScore = "94%";
+    readabilityProgress = "w-[94%]";
+    readabilityHint = "Standard ATS format; highly readable font setup.";
+    impactScore = "45%";
+    impactProgress = "w-[45%]";
+    impactHint = "Replace passive action verbs like 'worked on' or 'participated'.";
+  }
 
   return (
-    <div className="w-64 border-l border-hairline bg-surface-1 h-full p-lg flex flex-col flex-shrink-0">
+    <div className="w-64 border-l border-hairline bg-surface-1 h-full p-lg flex flex-col flex-shrink-0 select-none">
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
           <FileText className="w-4 h-4 text-ai" />
@@ -26,17 +67,17 @@ export function AtsScorecard({ activeBranch }: AtsScorecardProps) {
 
       <div className="mb-8">
         <div className="text-4xl font-bold text-text-primary tracking-tighter mb-1 tabular-nums">
-          {isStripe ? "82" : "91"}
+          {score}
           <span className="text-xl text-text-tertiary">%</span>
         </div>
         <div
           className={`text-[10px] font-bold px-2 py-1 rounded inline-block border ${
-            isStripe
-              ? "text-warning bg-warning/10 border-warning/20"
-              : "text-success bg-success/10 border-success/20"
+            score >= 90
+              ? "text-success bg-success/10 border-success/20"
+              : "text-warning bg-warning/10 border-warning/20"
           }`}
         >
-          {isStripe ? resumeCopy.scoreNeedsWork : resumeCopy.scoreReady}
+          {scoreText}
         </div>
       </div>
 
@@ -46,15 +87,13 @@ export function AtsScorecard({ activeBranch }: AtsScorecardProps) {
             <span className="flex items-center gap-1.5">
               <Search className="w-3.5 h-3.5 text-text-secondary" /> {resumeCopy.keywords}
             </span>
-            <span className={isStripe ? "text-warning" : "text-success"}>{isStripe ? "76%" : "89%"}</span>
+            <span className={score >= 90 ? "text-success" : "text-warning"}>{keywordsScore}</span>
           </div>
           <div className="h-1.5 w-full bg-surface-3 rounded-full overflow-hidden">
-            <div className={`h-full ${isStripe ? "bg-warning w-[76%]" : "bg-success w-[89%]"}`} />
+            <div className={`h-full ${score >= 90 ? "bg-success" : "bg-warning"} ${keywordsProgress}`} />
           </div>
           <p className="text-[10px] text-text-tertiary mt-1.5 leading-snug">
-            {isStripe
-              ? 'Add "Distributed Systems" and "WebGL" — common in this role.'
-              : "Core keywords for this role are covered."}
+            {keywordsHint}
           </p>
           <p className="text-[10px] text-text-tertiary mt-1 opacity-80">{resumeCopy.keywordsHint}</p>
         </div>
@@ -64,13 +103,13 @@ export function AtsScorecard({ activeBranch }: AtsScorecardProps) {
             <span className="flex items-center gap-1.5">
               <ScanLine className="w-3.5 h-3.5 text-text-secondary" /> {resumeCopy.readability}
             </span>
-            <span className="text-success">{isStripe ? "94%" : "96%"}</span>
+            <span className="text-success">{readabilityScore}</span>
           </div>
           <div className="h-1.5 w-full bg-surface-3 rounded-full overflow-hidden">
-            <div className={`h-full bg-success ${isStripe ? "w-[94%]" : "w-[96%]"}`} />
+            <div className={`h-full bg-success ${readabilityProgress}`} />
           </div>
           <p className="text-[10px] text-text-tertiary mt-1.5 leading-snug">
-            Clear sections — easy to skim in about {isStripe ? "6" : "5"} seconds.
+            {readabilityHint}
           </p>
           <p className="text-[10px] text-text-tertiary mt-1 opacity-80">{resumeCopy.readabilityHint}</p>
         </div>
@@ -80,13 +119,15 @@ export function AtsScorecard({ activeBranch }: AtsScorecardProps) {
             <span className="flex items-center gap-1.5">
               <Target className="w-3.5 h-3.5 text-text-secondary" /> {resumeCopy.impact}
             </span>
-            <span className={isStripe ? "text-danger" : "text-success"}>{isStripe ? "45%" : "88%"}</span>
+            <span className={score >= 90 ? "text-success" : (impactScore === "45%" ? "text-danger" : "text-warning")}>
+              {impactScore}
+            </span>
           </div>
           <div className="h-1.5 w-full bg-surface-3 rounded-full overflow-hidden">
-            <div className={`h-full ${isStripe ? "bg-danger w-[45%]" : "bg-success w-[88%]"}`} />
+            <div className={`h-full ${score >= 90 ? "bg-success" : (impactScore === "45%" ? "bg-danger" : "bg-warning")} ${impactProgress}`} />
           </div>
           <p className="text-[10px] text-text-tertiary mt-1.5 leading-snug">
-            {isStripe ? "4 bullets could use numbers (%, time saved, scale)." : "Strong use of measurable outcomes."}
+            {impactHint}
           </p>
           <p className="text-[10px] text-text-tertiary mt-1 opacity-80">{resumeCopy.impactHint}</p>
         </div>

@@ -100,27 +100,6 @@ export function Sidebar() {
           );
         })}
       </div>
-
-      <div className="p-sm border-t border-hairline flex flex-col gap-xxs">
-        <button
-          type="button"
-          onClick={() => window.dispatchEvent(new Event("careeros:open-command"))}
-          className="flex items-center justify-between w-full px-xs py-2 rounded-md text-[13px] font-medium text-text-secondary hover:bg-surface-2 hover:text-text-primary transition-all duration-75 active:scale-[0.98]"
-        >
-          <div className="flex items-center gap-sm">
-            <Command className="w-4 h-4 opacity-70" />
-            {navCopy.commandMenu}
-          </div>
-          <kbd className="text-[10px] bg-surface-3 px-1.5 py-0.5 rounded text-text-tertiary border border-hairline shadow-[0_1px_0_rgba(255,255,255,0.05)_inset]">⌘K</kbd>
-        </button>
-        <Link
-          href="/settings"
-          className="flex items-center gap-sm px-xs py-2 rounded-md text-[13px] font-medium text-text-secondary hover:bg-surface-2 hover:text-text-primary transition-all duration-75 active:scale-[0.98]"
-        >
-          <Settings className="w-4 h-4 opacity-70" />
-          Settings
-        </Link>
-      </div>
     </aside>
   );
 }
